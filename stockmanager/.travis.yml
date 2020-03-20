@@ -1,9 +1,8 @@
-language: python
+language: generic
 
 branches:
   only:
     - master
-    - develop
 
 install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-$TRAVIS_OS-x86_64.sh -O miniconda.sh;
