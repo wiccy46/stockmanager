@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import numpy as numpy
+import numpy as np
 import pandas as pd
 import time
 import datetime
@@ -53,6 +53,11 @@ class StockBase():
         self._cashflow = {
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
+
+    def get_recent(self, days=7):
+        today = datetime.datetime.date(datetime.datetime.now())
+        previous = today - datetime.timedelta(days=days+1)
+        return self.get_stock_info(start=previous.strftime("%Y-%m-%d"), end=today.strftime("%Y-%m-%d"))
 
         
     def get_stock_info(self, period="1mo", interval="1d", start=None, end=None,
