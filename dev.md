@@ -16,6 +16,14 @@ tox
 ```
 rm dist/*
 ```
+* Create new tag
+```
+git tag vx.y.z
+```
+* Checkout to tag
+```
+git checkout -b vx.y.z
+```
 * Build releases
 ```
 python setup.py sdist bdist_wheel 
