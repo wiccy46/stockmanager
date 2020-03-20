@@ -26,8 +26,8 @@ from . import helpers
 
 
 class StockBase():
-    
-    #TODO add proxy 
+
+    # TODO add proxy
     def __init__(self, ticker):
         """ticker is a string name of the stock"""
         self.ticker = ticker.upper()
@@ -56,14 +56,13 @@ class StockBase():
 
     def get_recent(self, days=7):
         today = datetime.datetime.date(datetime.datetime.now())
-        previous = today - datetime.timedelta(days=days+1)
+        previous = today - datetime.timedelta(days=days + 1)
         return self.get_stock_info(start=previous.strftime("%Y-%m-%d"), end=today.strftime("%Y-%m-%d"))
 
-        
     def get_stock_info(self, period="1mo", interval="1d", start=None, end=None,
                        timezone=None):
         """Interval options:
-        
+
         valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
         valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
         """
@@ -87,37 +86,34 @@ class StockBase():
             period = period.lower()
             params = {"range": period}
 
-       
         params["interval"] = interval.lower()
         url = "{}/v8/finance/chart/{}".format(self.base_url, self.ticker)
         content = requests.get(url=url, params=params)
-        
+
         if "Will be right back" in content.text:
             raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n")
         content = content.json()
-         # TODO deal with errors:
+        # TODO deal with errors:
 
         try: 
             df = helpers.create_df(content["chart"]["result"][0], timezone)
         except Exception:
             raise RuntimeError("Error parsing content.")
-        
+
         df.dropna(inplace=True)
         self._df = df.copy()
         return df
-    
+
     @property
     def df(self):
         return self._df
 
-
     def _get_fundamentals(self, kind=None, proxy=None):
         """"This part scrap information from the Yahoo Finance: 
         https://finance.yahoo.com/quote/YOUR_TICKER 
-        
+
         It will try to get all fundamental information for more info than just prices.
         """
-        
         def cleanup(data):
             df = pd.DataFrame(data).drop(columns=['maxAge'])
             for col in df.columns:
@@ -150,8 +146,6 @@ class StockBase():
         url = '%s/%s' % (self.scrape_url, self.ticker)
         data = helpers.get_json(url, proxy)
 
-
-
         # holders
         url = "{}/{}/holders".format(self.scrape_url, self.ticker)
 
@@ -161,7 +155,6 @@ class StockBase():
         if 'Date Reported' in self._institutional_holders:
             self._institutional_holders['Date Reported'] = pd.to_datetime(
                 self._institutional_holders['Date Reported'])
-
 
         # sustainability
         d = {}
@@ -178,7 +171,6 @@ class StockBase():
 
             self._sustainability = s[~s.index.isin(
                 ['maxAge', 'ratingYear', 'ratingMonth'])]
-
 
         # info (be nice to python 2)
         self._info = {}
@@ -197,7 +189,6 @@ class StockBase():
         except Exception:
             pass
 
-
         # analyst recommendations
         try:
             rec = pd.DataFrame(
@@ -213,7 +204,7 @@ class StockBase():
             pass
 
         # get fundamentals
-        data = helpers.get_json(url+'/financials', proxy)
+        data = helpers.get_json(url + '/financials', proxy)
 
         # generic patterns
         for key in (
@@ -226,7 +217,7 @@ class StockBase():
             if isinstance(data.get(item), dict):
                 key[0]['yearly'] = cleanup(data[item][key[2]])
 
-            item = key[1]+'HistoryQuarterly'
+            item = key[1] + 'HistoryQuarterly'
             if isinstance(data.get(item), dict):
                 key[0]['quarterly'] = cleanup(data[item][key[2]])
 
@@ -271,6 +262,3 @@ class StockBase():
     @property
     def company_info(self):
         return self._info     
-        
-        
-        

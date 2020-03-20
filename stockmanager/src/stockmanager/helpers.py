@@ -8,6 +8,7 @@ try:
 except ImportError:
     import json as _json
 
+
 def empty_df(index=[]):
     empty = pd.DataFrame(index=index, data={
         'Open': np.nan, 'High': np.nan, 'Low': np.nan,
@@ -25,22 +26,22 @@ def create_df(data, timezone=None):
         adjclose = data["indicators"]["adjclose"][0]["adjclose"]
 
     quotes = pd.DataFrame({"Open": all_prices["open"],
-                            "High": all_prices["high"],
-                            "Low": all_prices["low"],
-                            "Close": all_prices["close"],
-                            "Adj Close": adjclose,
-                            "Volume": all_prices["volume"]})
+                           "High": all_prices["high"],
+                           "Low": all_prices["low"],
+                           "Close": all_prices["close"],
+                           "Adj Close": adjclose,
+                           "Volume": all_prices["volume"]})
 
     quotes.index = pd.to_datetime(timestamps, unit="s")
     quotes.sort_index(inplace=True)
 
     if timezone is not None:
         quotes.index = quotes.index.tz_localize(timezone)
-
     return quotes
 
+
 def camel2title(o):
-    return [re.sub("([a-z])([A-Z])", "\g<1> \g<2>", i).title() for i in o]
+    return [re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", i).title() for i in o]
 
 
 def get_json(url, proxy=None):
@@ -52,7 +53,6 @@ def get_json(url, proxy=None):
         if "QuoteSummaryStore" not in html:
             return {}
 
-    
     json_str = html.split('root.App.main =')[1].split(
         '(this)')[0].split(';\n}')[0].strip()
     data = _json.loads(json_str)[
