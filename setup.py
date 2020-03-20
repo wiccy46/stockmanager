@@ -1,32 +1,23 @@
-from setuptools import setup, find_packages
-import os
-import codecs
-from os.path import join
+# -*- coding: utf-8 -*-
+"""
+    Setup file for stockmanager.
+    Use setup.cfg to configure your project.
 
-project_root = os.path.dirname(os.path.abspath(__file__))
+    This file was generated with PyScaffold 3.2.3.
+    PyScaffold helps you to put up the scaffold of your new Python project.
+    Learn more under: https://pyscaffold.org/
+"""
+import sys
+
+from pkg_resources import VersionConflict, require
+from setuptools import setup
+
+try:
+    require('setuptools>=38.3')
+except VersionConflict:
+    print("Error: version of setuptools is too old (<38.3)!")
+    sys.exit(1)
 
 
-version = {}
-with open(join(project_root, 'stockmanager/version.py')) as read_file:
-    exec(read_file.read(), version)
-
-with open("README.md", "r") as fh:
-    LONG_DESCRIPTION = fh.read()
-
-with open(join(project_root, 'requirements.txt')) as read_file:
-    REQUIRED = read_file.read().splitlines()
-
-setup(
-    name='stockmanager',
-    version='0.0.2',
-    description='Stock Manager',
-    long_description=LONG_DESCRIPTION,
-    # py_modules=['stockmanager'], 
-    # packages=find_packages(exclude=["tests"]),
-    # packages=['src'],
-    package_dir={'': 'stockmanager'},
-    # packages=find_packages(where='src'),
-    install_requires=REQUIRED,
-    author='Jiajun Yang',
-    author_email='thejyang@gmail.com',
-)
+if __name__ == "__main__":
+    setup(use_pyscaffold=True)
