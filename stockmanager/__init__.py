@@ -1,4 +1,4 @@
-__version__ = "0.0.1"
-__author__ = "Jiajun Yang"
+from version import __version__
 
-from .base import StockBase
+from .StockBase import StockBase
+from .StockBase import Hello

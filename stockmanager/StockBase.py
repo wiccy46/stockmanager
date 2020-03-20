@@ -24,6 +24,7 @@ import datetime
 import requests
 from . import helpers
 
+
 class StockBase():
     
     #TODO add proxy 
