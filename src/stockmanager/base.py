@@ -133,7 +133,7 @@ class StockBase():
                 end = int(time.time())
             elif isinstance(end, str):
                 end = np.datetime64(end)
-                end = pd.to_datetime(end) + datetime.timedelta(days=1) # This is to include end date
+                end = pd.to_datetime(end) + datetime.timedelta(days=1)  # This is to include end date
                 end = int(end.timestamp())
             elif isinstance(end, datetime.datetime):
                 end = int(time.mktime(end.timetuple()))
