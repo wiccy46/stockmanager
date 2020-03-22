@@ -24,17 +24,38 @@ import datetime
 import requests
 from . import helpers
 
+VALID_PERIOD = ['1d', '5d', '1mo', '3mo', '6mo',
+                '1y', '2y', '5y', '10y', 'ytd', 'max']
+VALID_INTERVAL = ['1m', '2m', '5m', '15m','30m', '60m',
+                  '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
+
 
 class StockBase():
+    """Base class of stockmanager, here it holds all basic infomation of a particular
+    ticker. The information is requested from Yahoo Finance.
+
+    Attributes
+    ----------
+    ticker : str
+        ticker, e.g. Microsoft is MSFT.
+    _base_url : str
+        https://query1.finance.yahoo.com
+    _scrape_url : str
+        https://finance.yahoo.com/quote
+
+
+
+
+    """
 
     # TODO add proxy
     def __init__(self, ticker):
         """ticker is a string name of the stock"""
         self.ticker = ticker.upper()
-        self.base_url = 'https://query1.finance.yahoo.com'
-        self.scrape_url = 'https://finance.yahoo.com/quote'
-        self._fundamentals = False
-        self._recommendations = None
+        self._base_url = 'https://query1.finance.yahoo.com'
+        self._scrape_url = 'https://finance.yahoo.com/quote'
+        self._fundamentals = False  # TODO to be added with get_fundamental()
+        self._recommendations = None  # TODO to be decided whether this necessary
         self._institutional_holders = None
         self._sustainability = None
         self._calendar = None
@@ -55,16 +76,41 @@ class StockBase():
             "quarterly": helpers.empty_df()}
 
     def get_recent(self, days=7):
+        # TODO this is unnecessary
         today = datetime.datetime.date(datetime.datetime.now())
         previous = today - datetime.timedelta(days=days + 1)
         return self.get_stock_info(start=previous.strftime("%Y-%m-%d"), end=today.strftime("%Y-%m-%d"))
 
-    def get_stock_info(self, period="1mo", interval="1d", start=None, end=None,
+    def get_price(self, period="1mo", interval="1d", start=None, end=None,
                        timezone=None):
-        """Interval options:
+        """Return a DataFrame of the ticker based on certain period and interval
 
-        valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-        valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+        Examples
+        --------
+        Two ways of choosing the time range, 1) using period 2) start/end::
+
+            from stockmanager import StockBase
+
+            msft = StockBase('MSFT')
+            df1 = msft.get_price(period='3mo', interval='1d')
+
+            # or to use start and end
+            df2 = msft.get_price(start='2020-01-01', end='2020-02-01')
+
+        Parameters
+        ----------
+        period : str
+            Time period to retrive, it can only be one of the following:
+            1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+        interval : str
+            Interval of the desired period, it can only be one of the following:
+            1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+        start : None or str
+            Use either period or start/end. If start/end is used, use yy-mm-dd format.
+        end : None or str
+            End date, yy-mm-dd
+        timezone : None or str
+            TODO.
         """
         if start or period is None or period.lower() == "max":
             if start is None:
@@ -87,7 +133,7 @@ class StockBase():
             params = {"range": period}
 
         params["interval"] = interval.lower()
-        url = "{}/v8/finance/chart/{}".format(self.base_url, self.ticker)
+        url = "{}/v8/finance/chart/{}".format(self._base_url, self.ticker)
         content = requests.get(url=url, params=params)
 
         if "Will be right back" in content.text:
@@ -143,11 +189,11 @@ class StockBase():
             return
 
         # get info and sustainability
-        url = '%s/%s' % (self.scrape_url, self.ticker)
+        url = '%s/%s' % (self._scrape_url, self.ticker)
         data = helpers.get_json(url, proxy)
 
         # holders
-        url = "{}/{}/holders".format(self.scrape_url, self.ticker)
+        url = "{}/{}/holders".format(self._scrape_url, self.ticker)
 
         holders = pd.read_html(url)
         self._major_holders = holders[0]
