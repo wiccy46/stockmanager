@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.0.4
+=============
+
+- get_stock_info() is not get_price().
+
 
 Version 0.0.3
 =============

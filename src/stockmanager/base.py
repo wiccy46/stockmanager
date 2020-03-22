@@ -115,8 +115,8 @@ class StockBase():
         timezone : None or str
             TODO.
         """
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         if start or period is None or period.lower() == "max":
             if start is None:
                 start = -2208988800
