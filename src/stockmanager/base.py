@@ -21,12 +21,14 @@ import numpy as np
 import pandas as pd
 import time
 import datetime
+
 import requests
 from . import helpers
 
+
 VALID_PERIOD = ['1d', '5d', '1mo', '3mo', '6mo',
                 '1y', '2y', '5y', '10y', 'ytd', 'max']
-VALID_INTERVAL = ['1m', '2m', '5m', '15m','30m', '60m',
+VALID_INTERVAL = ['1m', '2m', '5m', '15m', '30m', '60m',
                   '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
 
 
@@ -75,14 +77,14 @@ class StockBase():
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
 
-    def get_recent(self, days=7):
-        # TODO this is unnecessary
-        today = datetime.datetime.date(datetime.datetime.now())
-        previous = today - datetime.timedelta(days=days + 1)
-        return self.get_stock_info(start=previous.strftime("%Y-%m-%d"), end=today.strftime("%Y-%m-%d"))
+    # def get_recent(self, days=7):
+    #     # TODO this is unnecessary
+    #     today = datetime.datetime.date(datetime.datetime.now())
+    #     previous = today - datetime.timedelta(days=days + 1)
+    #     return self.get_stock_info(start=previous.strftime("%Y-%m-%d"), end=today.strftime("%Y-%m-%d"))
 
-    def get_price(self, period="1mo", interval="1d", start=None, end=None,
-                       timezone=None):
+    def get_price(self, period="1mo", interval="1d",
+                  start=None, end=None, timezone=None):
         """Return a DataFrame of the ticker based on certain period and interval
 
         Examples
@@ -106,26 +108,37 @@ class StockBase():
             Interval of the desired period, it can only be one of the following:
             1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
         start : None or str
-            Use either period or start/end. If start/end is used, use yy-mm-dd format.
+            Use either period or start/end. If start/end is used,
+            use yy-mm-dd format. start date will be included if possible
         end : None or str
-            End date, yy-mm-dd
+            End date, yy-mm-dd, end date will be included if possible.
         timezone : None or str
             TODO.
         """
+        import pdb
+        pdb.set_trace()
         if start or period is None or period.lower() == "max":
             if start is None:
                 start = -2208988800
+            elif isinstance(start, str):
+                start = np.datetime64(start)
+                start = pd.to_datetime(start)
+                start = int(start.timestamp())
             elif isinstance(start, datetime.datetime):
                 start = int(time.mktime(start.timetuple()))
             else:
-                start = int(time.mktime(
-                    time.strptime(str(start), '%Y-%m-%d')))
+                raise(TypeError("start must be None, str, or datetime.dateime"))
+
             if end is None:
                 end = int(time.time())
+            elif isinstance(end, str):
+                end = np.datetime64(end)
+                end = pd.to_datetime(end) + datetime.timedelta(days=1) # This is to include end date
+                end = int(end.timestamp())
             elif isinstance(end, datetime.datetime):
                 end = int(time.mktime(end.timetuple()))
             else:
-                end = int(time.mktime(time.strptime(str(end), '%Y-%m-%d')))
+                raise(TypeError("end must be None, str, or datetime.dateime"))
 
             params = {"period1": start, "period2": end}
         else:
