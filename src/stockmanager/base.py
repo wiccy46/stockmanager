@@ -294,7 +294,6 @@ class StockBase():
 
         # get fundamentals
         financials = helpers.get_json(url + '/financials', proxy)
-        print(financials)
         # generic patterns
         for key in (
             (self._cashflow, 'cashflowStatement', 'cashflowStatements'),
@@ -325,11 +324,13 @@ class StockBase():
 
         self._fundamentals = True
 
-    def get_cash_flow(self, freq='yearly'):
+    def get_cash_flow(self, as_dict=False, freq='yearly'):
         """Get the cash flow yearly or quarterly
 
         Parameters
         ----------
+        as_dict : False
+            if True return dict else return DataFrame
         freq : str
             Either yearly or quarterly, spelling sensitive but case insensitive
 
@@ -341,31 +342,51 @@ class StockBase():
         freq = freq.lower()
         if freq != 'yearly' and freq != 'quarterly':
             raise AttributeError("freq can only be 'yearly' or 'quarterly'.")
+
+        if as_dict:
+            return self._cashflow[freq].to_dict()
         return self._cashflow[freq]
-        
-    def get_general_info(self, proxy=None, as_dict=False, *args, **kwargs):
-        self._get_fundamentals(proxy)
-        info = self._recommendations
+
+    def get_earnings(self, as_dict=False, freq="yearly"):
+        """Get the earning yearly or quarterly
+
+        Parameters
+        ----------
+        as_dict : False
+            if True return dict else return DataFrame
+        freq : str
+            Either yearly or quarterly, spelling sensitive but case insensitive
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame of the earning in the desired frequency
+        """
+        freq = freq.lower()
+        if freq != 'yearly' and freq != 'quarterly':
+            raise AttributeError("freq can only be 'yearly' or 'quarterly'.")
         if as_dict:
-            return info.to_dict()
-        return info
+            return self._earnings[freq].to_dict()
+        return self._earnings[freq]
     
-    def get_earnings(self, proxy=None, as_dict=False, freq="yearly"):
-        # Currently no information
-        self._get_fundamentals(proxy)
-        data = self._earnings[freq]
+    def get_balancesheet(self, as_dict=False, freq="yearly"):
+        """Get the balancesheet yearly or quarterly
+
+         Parameters
+         ----------
+         as_dict : False
+             if True return dict else return DataFrame
+         freq : str
+             Either yearly or quarterly, spelling sensitive but case insensitive
+
+         Returns
+         -------
+         pandas.DataFrame
+             DataFrame of the earning in the desired frequency
+         """
+        freq = freq.lower()
+        if freq != 'yearly' and freq != 'quarterly':
+            raise AttributeError("freq can only be 'yearly' or 'quarterly'.")
         if as_dict:
-            return data.to_dict()
-        return data
-    
-    def get_balancesheet(self, proxy=None, as_dict=False, freq="yearly"):
-        # Currently no information
-        self._get_fundamentals(proxy)
-        data = self._balancesheet[freq]
-        if as_dict:
-            return data.to_dict()
-        return data
-            
-    @property
-    def company_info(self):
-        return self._info     
+            return self._balancesheet[freq].to_dict()
+        return self._balancesheet[freq]
