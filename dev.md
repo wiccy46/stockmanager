@@ -6,7 +6,6 @@
 ```
 pip install -U setuptools twine wheel
 ```
-* Check/adjust version in `pya/versions.py`
 * Update Changelog.md
 * Run tox
 ```
@@ -32,7 +31,7 @@ python setup.py sdist bdist_wheel
 ```
 twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 ```
-* [Check](https://test.pypi.org/project/pya/) the test project page 
+* [Check](https://test.pypi.org/project/stockmanager/) the test project page 
 
 * Test install uploaded release
 ```

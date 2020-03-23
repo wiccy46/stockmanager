@@ -8,6 +8,7 @@ Manager, Analyze, Stimulate stock information.
 .. image:: https://travis-ci.com/wiccy46/stockmanager.svg?branch=master
     :target: https://travis-ci.com/wiccy46/stockmanager
 
+
 Installation
 ============
 
@@ -27,10 +28,17 @@ Load a stock info::
     # result is a pandas DataFrame
     info_pd = stock.get_stock_info(start='2020-03-01', end='2020-03-19')
 
-    # or use get_recent() to get the recent days
-    recent_info_pd = stock.get_recent(days=7)
+    # Or use period and interval
+    # valid period: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+    # valid interval: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+    info_pd = stock.get_stock_info(period='1mo', interval='1d')
 
+    earnings = stock.get_earings(freq='yearly')
+    cashflow = stock.get_cashflow(freq='quarterly')
+    balancesheet = stock.get_balancesheet()
 
+Other attributes: institutional_holders, major_holders, mutual_fund_holders,
+sustainability, company_information,
 
 
 Description
@@ -44,8 +52,6 @@ Initial commit, currently on have method to get stock info, recent roadmap:
 * Analysis of stocks, visualization
 * Trading simulation... to be decided.
 * and more...
-
-
 
 
 Note
