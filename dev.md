@@ -17,7 +17,7 @@ rm dist/*
 ```
 * Create new tag
 ```
-git tag vx.y.z
+git tag vx.y.z  or git tag -a vx.y.z -m "Version x.y.z update"
 ```
 * Checkout to tag
 ```
