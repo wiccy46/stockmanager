@@ -110,6 +110,8 @@ class StockBase():
     def company_information(self):
         return self._info
 
+
+
     def get_price(self, period="1mo", interval="1d",
                   start=None, end=None, timezone=None):
         """Return a DataFrame of the ticker based on certain period and interval
@@ -232,9 +234,9 @@ class StockBase():
         data = helpers.get_json(url, proxy)
 
         # holders
-        url = "{}/{}/holders".format(self._scrape_url, self.ticker)
+        url_holders = "{}/{}/holders".format(self._scrape_url, self.ticker)
 
-        holders = pd.read_html(url)
+        holders = pd.read_html(url_holders)
         self._major_holders = holders[0]
         self._institutional_holders = holders[1]
         self._mutual_fund_holders = holders[2]
@@ -276,6 +278,7 @@ class StockBase():
             pass
 
         # analyst recommendations
+
         try:
             rec = pd.DataFrame(
                 data['upgradeDowngradeHistory']['history'])
@@ -290,8 +293,8 @@ class StockBase():
             pass
 
         # get fundamentals
-        data = helpers.get_json(url + '/financials', proxy)
-
+        financials = helpers.get_json(url + '/financials', proxy)
+        print(financials)
         # generic patterns
         for key in (
             (self._cashflow, 'cashflowStatement', 'cashflowStatements'),
@@ -300,16 +303,16 @@ class StockBase():
         ):
 
             item = key[1] + 'History'
-            if isinstance(data.get(item), dict):
-                key[0]['yearly'] = cleanup(data[item][key[2]])
+            if isinstance(financials.get(item), dict):
+                key[0]['yearly'] = cleanup(financials[item][key[2]])
 
             item = key[1] + 'HistoryQuarterly'
-            if isinstance(data.get(item), dict):
-                key[0]['quarterly'] = cleanup(data[item][key[2]])
+            if isinstance(financials.get(item), dict):
+                key[0]['quarterly'] = cleanup(financials[item][key[2]])
 
         # earnings
-        if isinstance(data.get('earnings'), dict):
-            earnings = data['earnings']['financialsChart']
+        if isinstance(financials.get('earnings'), dict):
+            earnings = financials['earnings']['financialsChart']
             df = pd.DataFrame(earnings['yearly']).set_index('date')
             df.columns = helpers.camel2title(df.columns)
             df.index.name = 'Year'
@@ -321,6 +324,24 @@ class StockBase():
             self._earnings['quarterly'] = df
 
         self._fundamentals = True
+
+    def get_cash_flow(self, freq='yearly'):
+        """Get the cash flow yearly or quarterly
+
+        Parameters
+        ----------
+        freq : str
+            Either yearly or quarterly, spelling sensitive but case insensitive
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame of the cashflow in the desired frequency
+        """
+        freq = freq.lower()
+        if freq != 'yearly' and freq != 'quarterly':
+            raise AttributeError("freq can only be 'yearly' or 'quarterly'.")
+        return self._cashflow[freq]
         
     def get_general_info(self, proxy=None, as_dict=False, *args, **kwargs):
         self._get_fundamentals(proxy)
