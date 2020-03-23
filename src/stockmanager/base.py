@@ -44,14 +44,15 @@ class StockBase():
         https://query1.finance.yahoo.com
     _scrape_url : str
         https://finance.yahoo.com/quote
-
-
-
+    content : dict
+        Raw content of the web request.
+    _fundamentals : bool
+        Flag to check if get_fundamentals() is already successfully called.
 
     """
 
     # TODO add proxy
-    def __init__(self, ticker):
+    def __init__(self, ticker, proxy=None):
         """ticker is a string name of the stock"""
         self.ticker = ticker.upper()
         self._base_url = 'https://query1.finance.yahoo.com'
@@ -63,6 +64,7 @@ class StockBase():
         self._calendar = None
         self._expirations = {}
         self._info = None
+        self._proxy = proxy
 
         self._earnings = {
             "yearly": helpers.empty_df(),
@@ -77,11 +79,15 @@ class StockBase():
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
 
-    # def get_recent(self, days=7):
-    #     # TODO this is unnecessary
-    #     today = datetime.datetime.date(datetime.datetime.now())
-    #     previous = today - datetime.timedelta(days=days + 1)
-    #     return self.get_stock_info(start=previous.strftime("%Y-%m-%d"), end=today.strftime("%Y-%m-%d"))
+        self._get_fundamentals()  # get all fundamental information, TODO Add proxy
+
+    @property
+    def holders(self):
+        return self._institutional_holders
+
+    @property
+    def major_holder(self):
+        return self._major_holders
 
     def get_price(self, period="1mo", interval="1d",
                   start=None, end=None, timezone=None):
@@ -147,19 +153,18 @@ class StockBase():
 
         params["interval"] = interval.lower()
         url = "{}/v8/finance/chart/{}".format(self._base_url, self.ticker)
-        content = requests.get(url=url, params=params)
+        self.content = requests.get(url=url, params=params)
 
-        if "Will be right back" in content.text:
+        # What if other language? Question, how to test it. 
+        if "Will be right back" in self.content.text:
             raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n")
-        content = content.json()
-        # TODO deal with errors:
-
+        self.content = self.content.json()
+        self.content = self.content["chart"]["result"][0]
         try: 
-            df = helpers.create_df(content["chart"]["result"][0], timezone)
+            df = helpers.create_df(self.content, timezone)
+            df.dropna(inplace=True)
         except Exception:
             raise RuntimeError("Error parsing content.")
-
-        df.dropna(inplace=True)
         self._df = df.copy()
         return df
 

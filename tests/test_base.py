@@ -38,6 +38,5 @@ def test_getprice():
 
     # different period and interval.
 
-def test_get_general_info():
-    # general_info = sb.get_general_info()
-    pass
+def test_get_fundamental():
+    assert type(sb.holders) is pd.DataFrame
