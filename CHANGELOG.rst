@@ -6,6 +6,7 @@ Version 0.0.4
 =============
 
 - get_stock_info() is not get_price().
+- add properties: institutional_holders, major_holders, mutual_fund_holders, sustainability, company_information
 
 
 Version 0.0.3
