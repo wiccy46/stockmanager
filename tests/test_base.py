@@ -1,5 +1,6 @@
 from stockmanager import StockBase
 import pandas as pd
+import pytest
 import numpy as np
 from datetime import datetime
 from datetime import timedelta
@@ -46,3 +47,39 @@ def test_get_fundamental():
     assert type(sb.mutual_fund_holders) is pd.DataFrame
     assert type(sb.sustainability) is pd.DataFrame
     assert type(sb.company_information) is dict
+
+def test_cashflow():
+    cashflow = sb.get_cashflow()
+    assert type(cashflow) is pd.DataFrame
+
+    cashflow = sb.get_cashflow(as_dict=True)
+    assert type(cashflow) is dict
+
+    _ = sb.get_cashflow(freq='Quarterly')
+
+    with pytest.raises(AttributeError):
+        _ = sb.get_cashflow(freq='monthly')
+
+def test_earings():
+    earnings = sb.get_earnings()
+    assert type(earnings) is pd.DataFrame
+
+    earnings = sb.get_earnings(as_dict=True)
+    assert type(earnings) is dict
+
+    _ = sb.get_earnings(freq='Quarterly')
+
+    with pytest.raises(AttributeError):
+        _ = sb.get_earnings(freq='monthly')
+
+def test_balancesheet():
+    balancesheet = sb.get_balancesheet()
+    assert type(balancesheet) is pd.DataFrame
+
+    balancesheet = sb.get_balancesheet(as_dict=True)
+    assert type(balancesheet) is dict
+
+    _ = sb.get_balancesheet(freq='Quarterly')
+
+    with pytest.raises(AttributeError):
+        _ = sb.get_balancesheet(freq='monthly')

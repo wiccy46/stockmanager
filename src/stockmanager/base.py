@@ -110,8 +110,6 @@ class StockBase():
     def company_information(self):
         return self._info
 
-
-
     def get_price(self, period="1mo", interval="1d",
                   start=None, end=None, timezone=None):
         """Return a DataFrame of the ticker based on certain period and interval
@@ -324,7 +322,7 @@ class StockBase():
 
         self._fundamentals = True
 
-    def get_cash_flow(self, as_dict=False, freq='yearly'):
+    def get_cashflow(self, as_dict=False, freq='yearly'):
         """Get the cash flow yearly or quarterly
 
         Parameters
