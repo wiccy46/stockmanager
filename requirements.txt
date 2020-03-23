@@ -19,4 +19,7 @@
 numpy
 scipy 
 requests
-pandas 
+pandas
+lxml>=4.5.0
+html5lib
+

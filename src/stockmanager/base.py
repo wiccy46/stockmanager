@@ -234,7 +234,7 @@ class StockBase():
         # holders
         url = "{}/{}/holders".format(self._scrape_url, self.ticker)
 
-        holders = pd.read_html(url)
+        holders = pd.read_html(url, flavor='html5lib')
         self._major_holders = holders[0]
         self._institutional_holders = holders[1]
         self._mutual_fund_holders = holders[2]
