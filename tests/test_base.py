@@ -6,6 +6,8 @@ from datetime import timedelta
 
 sb = StockBase('MSFT')
 
+# A better way should be a mock test. ....
+
 def test_attribute():
     assert sb._base_url == 'https://query1.finance.yahoo.com'
     assert sb._scrape_url == 'https://finance.yahoo.com/quote'
@@ -39,4 +41,8 @@ def test_getprice():
     # different period and interval.
 
 def test_get_fundamental():
-    assert type(sb.holders) is pd.DataFrame
+    assert type(sb.institutional_holders) is pd.DataFrame
+    assert type(sb.major_holders) is pd.DataFrame
+    assert type(sb.mutual_fund_holders) is pd.DataFrame
+    assert type(sb.sustainability) is pd.DataFrame
+    assert type(sb.company_information) is dict

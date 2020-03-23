@@ -44,11 +44,18 @@ class StockBase():
         https://query1.finance.yahoo.com
     _scrape_url : str
         https://finance.yahoo.com/quote
-    content : dict
+    _price_request_content : dict
         Raw content of the web request.
     _fundamentals : bool
         Flag to check if get_fundamentals() is already successfully called.
-
+    major_holders : pandas.DataFrame
+        Major holders
+    institutional_holders : pandas.DataFrame
+        Top institutional holders
+    mutual_fund_holder : pandas.DataFrame
+        Top mutual fund holder
+    company_information : dict
+        General information of the company, e.g. sector, fullTimeEmployees, website, etc.
     """
 
     # TODO add proxy
@@ -60,6 +67,8 @@ class StockBase():
         self._fundamentals = False  # TODO to be added with get_fundamental()
         self._recommendations = None  # TODO to be decided whether this necessary
         self._institutional_holders = None
+        self._major_holders = None
+        self._mutual_fund_holders = None
         self._sustainability = None
         self._calendar = None
         self._expirations = {}
@@ -82,12 +91,24 @@ class StockBase():
         self._get_fundamentals()  # get all fundamental information, TODO Add proxy
 
     @property
-    def holders(self):
+    def institutional_holders(self):
         return self._institutional_holders
 
     @property
-    def major_holder(self):
+    def major_holders(self):
         return self._major_holders
+
+    @property
+    def mutual_fund_holders(self):
+        return self._mutual_fund_holders
+
+    @property
+    def sustainability(self):
+        return self._sustainability
+
+    @property
+    def company_information(self):
+        return self._info
 
     def get_price(self, period="1mo", interval="1d",
                   start=None, end=None, timezone=None):
@@ -153,15 +174,15 @@ class StockBase():
 
         params["interval"] = interval.lower()
         url = "{}/v8/finance/chart/{}".format(self._base_url, self.ticker)
-        self.content = requests.get(url=url, params=params)
+        self._price_request_content = requests.get(url=url, params=params)
 
         # What if other language? Question, how to test it. 
-        if "Will be right back" in self.content.text:
+        if "Will be right back" in self._price_request_content.text:
             raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n")
-        self.content = self.content.json()
-        self.content = self.content["chart"]["result"][0]
+        self._price_request_content = self._price_request_content.json()
+        self._price_request_content = self._price_request_content["chart"]["result"][0]
         try: 
-            df = helpers.create_df(self.content, timezone)
+            df = helpers.create_df(self._price_request_content, timezone)
             df.dropna(inplace=True)
         except Exception:
             raise RuntimeError("Error parsing content.")
@@ -216,6 +237,7 @@ class StockBase():
         holders = pd.read_html(url)
         self._major_holders = holders[0]
         self._institutional_holders = holders[1]
+        self._mutual_fund_holders = holders[2]
         if 'Date Reported' in self._institutional_holders:
             self._institutional_holders['Date Reported'] = pd.to_datetime(
                 self._institutional_holders['Date Reported'])
