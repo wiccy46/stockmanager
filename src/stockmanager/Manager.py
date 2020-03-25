@@ -7,8 +7,18 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.addHandler(logging.NullHandler())
 
 
-class Trade_Manager(object):
-    def __init__(self, data_folder=None):
+class Manager(object):
+    """Manager is a class help you keep track of your trade record, holders, profit of multiple tickers, save record
+    as a csv.
+
+    There are two ways, you can either instantiate a new manager or pull a prerecorded record file.
+
+    Examples
+    --------
+
+    """
+
+    def __init__(self, read_file=None):
         self.info = {}
         self.record = {}
         self.path = './' if not data_folder else self._set_data_folder(data_folder)

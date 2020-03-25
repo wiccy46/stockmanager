@@ -46,7 +46,6 @@ def camel2title(o):
 
 def get_json(url, proxy=None):
     html = requests.get(url=url, proxies=proxy).text
-    # import pdb; pdb.set_trace()
     if "QuoteSummaryStore" not in html:
         html = requests.get(url=url, proxies=proxy).text
         if "QuoteSummaryStore" not in html:
