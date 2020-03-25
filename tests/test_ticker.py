@@ -1,11 +1,11 @@
-from stockmanager import StockBase
+from stockmanager import Ticker
 import pandas as pd
 import pytest
 import numpy as np
 from datetime import datetime
 from datetime import timedelta
 
-sb = StockBase('MSFT')
+sb = Ticker(symbol='MSFT')
 
 # A better way should be a mock test. ....
 

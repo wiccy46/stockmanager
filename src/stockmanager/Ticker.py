@@ -32,14 +32,14 @@ VALID_INTERVAL = ['1m', '2m', '5m', '15m', '30m', '60m',
                   '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
 
 
-class StockBase():
+class Ticker():
     """Base class of stockmanager, here it holds all basic infomation of a particular
     ticker. The information is requested from Yahoo Finance.
 
     Attributes
     ----------
-    ticker : str
-        ticker, e.g. Microsoft is MSFT.
+    symbol : str
+        ticker symbol, updating the symbol will update the fundamental e.g. Microsoft is MSFT.
     _base_url : str
         https://query1.finance.yahoo.com
     _scrape_url : str
@@ -59,9 +59,9 @@ class StockBase():
     """
 
     # TODO add proxy
-    def __init__(self, ticker, proxy=None):
+    def __init__(self, symbol, proxy=None):
         """ticker is a string name of the stock"""
-        self.ticker = ticker.upper()
+        self._ticker_symbol = symbol.upper()
         self._base_url = 'https://query1.finance.yahoo.com'
         self._scrape_url = 'https://finance.yahoo.com/quote'
         self._fundamentals = False  # TODO to be added with get_fundamental()
@@ -87,8 +87,16 @@ class StockBase():
         self._cashflow = {
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
-
         self._get_fundamentals()  # get all fundamental information, TODO Add proxy
+
+    @property
+    def symbol(self):
+        return self._ticker_symbol
+
+    @symbol.setter
+    def symbol(self, symbol):
+        self._ticker_symbol = symbol
+        self._get_fundamentals()
 
     @property
     def institutional_holders(self):
@@ -168,10 +176,14 @@ class StockBase():
             params = {"period1": start, "period2": end}
         else:
             period = period.lower()
+            if period not in VALID_PERIOD:
+                raise(AttributeError("valid period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max. "))
             params = {"range": period}
 
+        if interval not in VALID_INTERVAL:
+            raise(AttributeError("valid interval: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo"))
         params["interval"] = interval.lower()
-        url = "{}/v8/finance/chart/{}".format(self._base_url, self.ticker)
+        url = "{}/v8/finance/chart/{}".format(self._base_url, self._ticker_symbol)
         self._price_request_content = requests.get(url=url, params=params)
 
         # What if other language? Question, how to test it. 
@@ -226,11 +238,11 @@ class StockBase():
             return
 
         # get info and sustainability
-        url = '%s/%s' % (self._scrape_url, self.ticker)
+        url = '%s/%s' % (self._scrape_url, self._ticker_symbol)
         data = helpers.get_json(url, proxy)
 
         # holders
-        url_holders = "{}/{}/holders".format(self._scrape_url, self.ticker)
+        url_holders = "{}/{}/holders".format(self._scrape_url, self._ticker_symbol)
 
         holders = pd.read_html(url_holders)
         self._major_holders = holders[0]
