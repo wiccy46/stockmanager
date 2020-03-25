@@ -11,5 +11,5 @@ finally:
     del get_distribution, DistributionNotFound
 
 from .Ticker import Ticker
-from .Manager import Manager
+from .Portfolio import Portfolio
 from .helpers import get_json, create_df, camel2title, empty_df

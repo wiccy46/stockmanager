@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.0.7
+=============
+
+- Add Portfolio class for managing your stock portfolio
+- Test Portfolio
+
 Version 0.0.6
 =============
 
