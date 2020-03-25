@@ -74,6 +74,9 @@ class Ticker():
         self._expirations = {}
         self._info = None
         self._proxy = proxy
+        self._name = None
+        self._current_price = None
+        self._currency = None
 
         self._earnings = {
             "yearly": helpers.empty_df(),
@@ -87,6 +90,7 @@ class Ticker():
         self._cashflow = {
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
+
         self._get_fundamentals()  # get all fundamental information, TODO Add proxy
 
     @property
@@ -118,6 +122,24 @@ class Ticker():
     def company_information(self):
         return self._info
 
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def current_price(self):
+        try:
+            url = '%s/%s' % (self._scrape_url, self._ticker_symbol)
+            data = helpers.get_json(url, self._proxy)
+            self._current_price = data['price']['regularMarketPrice']
+            return self._current_price
+        except:
+            return self._current_price
+
+    @property
+    def currency(self):
+        return self._currency
+
     def get_price(self, period="1mo", interval="1d",
                   start=None, end=None, timezone=None):
         """Return a DataFrame of the ticker based on certain period and interval
@@ -126,7 +148,7 @@ class Ticker():
         --------
         Two ways of choosing the time range, 1) using period 2) start/end::
 
-            from stockmanager import StockBase
+            from stockmanager import Ticker
 
             msft = StockBase('MSFT')
             df1 = msft.get_price(period='3mo', interval='1d')
@@ -203,7 +225,7 @@ class Ticker():
     def df(self):
         return self._df
 
-    def _get_fundamentals(self, kind=None, proxy=None):
+    def _get_fundamentals(self, proxy=None):
         """"This part scrap information from the Yahoo Finance: 
         https://finance.yahoo.com/quote/YOUR_TICKER 
 
@@ -245,12 +267,24 @@ class Ticker():
         url_holders = "{}/{}/holders".format(self._scrape_url, self._ticker_symbol)
 
         holders = pd.read_html(url_holders)
-        self._major_holders = holders[0]
-        self._institutional_holders = holders[1]
-        self._mutual_fund_holders = holders[2]
-        if 'Date Reported' in self._institutional_holders:
-            self._institutional_holders['Date Reported'] = pd.to_datetime(
-                self._institutional_holders['Date Reported'])
+        try:
+            if len(holders) == 3:
+                self._major_holders = holders[0]
+                self._institutional_holders = holders[1]
+                self._mutual_fund_holders = holders[2]
+                if 'Date Reported' in self._institutional_holders:
+                    self._institutional_holders['Date Reported'] = pd.to_datetime(
+                        self._institutional_holders['Date Reported'])
+            elif len(holders) == 2:
+                self.self._major_holders = holders[0]
+                self._institutional_holders = None
+                self._mutual_fund_holders = holders[1]
+        except:
+            self._major_holders = None
+            self._institutional_holders = None
+            self._mutual_fund_holders = None
+
+        self._all_holders = holders
 
         # sustainability
         d = {}
@@ -267,8 +301,8 @@ class Ticker():
 
             self._sustainability = s[~s.index.isin(
                 ['maxAge', 'ratingYear', 'ratingMonth'])]
-
-        # info (be nice to python 2)
+        #
+        # #  company info (be nice to python 2)
         self._info = {}
         items = ['summaryProfile', 'summaryDetail', 'quoteType',
                  'defaultKeyStatistics', 'assetProfile', 'summaryDetail']
@@ -278,6 +312,8 @@ class Ticker():
 
         self._info['regularMarketPrice'] = self._info['regularMarketOpen']
         self._info['logo_url'] = ""
+        self._name = self._info['shortName']  # Company Name
+        self._currency = self._info['currency']
         try:
             domain = self._info['website'].split(
                 '://')[1].split('/')[0].replace('www.', '')
@@ -286,7 +322,6 @@ class Ticker():
             pass
 
         # analyst recommendations
-
         try:
             rec = pd.DataFrame(
                 data['upgradeDowngradeHistory']['history'])

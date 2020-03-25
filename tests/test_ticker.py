@@ -42,11 +42,14 @@ def test_getprice():
     # different period and interval.
 
 def test_get_fundamental():
-    assert type(sb.institutional_holders) is pd.DataFrame
+    assert sb.name == 'Microsoft Corporation'
+    assert type(sb.institutional_holders) is pd.DataFrame or sb.institutional_holders is None # this is optional though
     assert type(sb.major_holders) is pd.DataFrame
     assert type(sb.mutual_fund_holders) is pd.DataFrame
     assert type(sb.sustainability) is pd.DataFrame
     assert type(sb.company_information) is dict
+    assert type(sb.currency) is str
+    assert type(sb.current_price) is float
 
 def test_cashflow():
     cashflow = sb.get_cashflow()
