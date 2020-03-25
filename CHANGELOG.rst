@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.0.6
+=============
+
+- Refactor the base class StockBase to Ticker.
+- Fixed README still showing the outdated tutorial.
+
 Version 0.0.5
 =============
 
