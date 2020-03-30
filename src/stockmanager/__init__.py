@@ -11,6 +11,7 @@ finally:
     del get_distribution, DistributionNotFound
 
 from .Ticker import Ticker
+from .Ticker import VALID_INTERVAL, VALID_PERIOD
 from .Portfolio import Portfolio
 from .helpers import *
 from .visualization import *

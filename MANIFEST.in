@@ -10,3 +10,6 @@ recursive-include tests *.py
 recursive-include src *.py
 
 recursive-include docs .gitignore
+
+recursive-include Examples *.ipynb
+recursive-include tests *.csv

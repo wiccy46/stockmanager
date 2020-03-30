@@ -6,6 +6,7 @@ from ..helpers import get_ohlc
 from ._arg_validator import _process_kwargs, _valid_plot_kwargs
 from itertools import cycle
 
+
 # Backend should be set before that.
 def plot_price(price, backend='matplotlib', **kwargs):
     """Plot price, by default use matplotlib's mplfinance as backend and ohlc as type.
@@ -117,8 +118,6 @@ def price_plot_with_plotly(price, **kwargs):
             fig.add_trace(go.Scatter(x=timeline_str, y=mavprices,
                                      line=dict(color='royalblue'),
                                      name="MAvg " + str(mav)))
-
-
 
     fig.update_layout(title={'text': config['title'],
                              'xanchor': 'auto'},

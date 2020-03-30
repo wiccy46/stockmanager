@@ -6,9 +6,6 @@ import matplotlib.colors as mcolors
 import io
 
 
-# TODO, This can be greatly simplify just for this particular package.
-
-
 def _warn_no_xgaps_deprecated(value):
     msg = "`no_xgaps` is deprecated:"\
           "Default value is now `no_xgaps=True`"\
@@ -118,8 +115,8 @@ def _valid_plot_kwargs():
         'ylabel_lower': {'Default': None,  # y-axis label default logic below
                          'Validator': lambda value: isinstance(value, str)},
 
-        # 'xlabel'      : { 'Default'     : None,  # x-axis label, default is None because obvious it's time or date
-        #                  'Validator'   : lambda value: isinstance(value,str) },
+        'xlabel': {'Default': None, 
+                   'Validator': lambda value: isinstance(value, str)},
 
         'addplot': {'Default': None,
                     'Validator': lambda value: isinstance(value, dict) or (isinstance(value, list) and all([isinstance(d, dict) for d in value]))},
