@@ -2,11 +2,16 @@ import pandas as pd
 import numpy as np 
 import re
 import requests
+import logging
 
 try:
     import ujson as _json
 except ImportError:
     import json as _json
+
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.addHandler(logging.NullHandler())
 
 
 def empty_df(index=[]):
@@ -60,3 +65,47 @@ def get_json(url, proxy=None):
         r'\{[\'|\"]raw[\'|\"]:(.*?),(.*?)\}', r'\1', new_data)
 
     return _json.loads(new_data)
+
+
+def get_ohlc(df):
+    """Check dataframe and return a flag of whether the dataframe has ohlc and a tuple or the available data."""
+    if not isinstance(df, pd.core.frame.DataFrame):
+        raise TypeError('Arg needs to be a pd.DataFrame')
+
+    ohlc_cols = {'open', 'high', 'low', 'close'}
+    price_cols = {'price'}
+    cols = df.columns.to_list()
+    cols = set(map(lambda x: x.lower(), cols))  # Make ohlc case insensitive
+
+    if ohlc_cols.issubset(cols) and price_cols.issubset(cols):
+        _LOGGER.info("Header has both ohlc and price")
+        opens = df['Open'].values
+        highs = df['High'].values
+        lows = df['Low'].values
+        closes = df['Close'].values
+        prices = df['Price'].values
+        volumes = df['Volume'].values if 'Volume' in df.columns else None
+        return True, (opens, highs, lows, closes, prices, volumes)
+
+    elif ohlc_cols.issubset(cols):
+        _LOGGER.info("Header has ohlc ")
+        opens = df['Open'].values
+        highs = df['High'].values
+        lows = df['Low'].values
+        closes = df['Close'].values
+        volumes = df['Volume'].values if 'Volume' in df.columns else None
+        return True, (opens, highs, lows, closes, volumes)
+
+    elif price_cols.issubset(cols):
+        _LOGGER.info("Header has Price.")
+        prices = df['Price'].values
+        volumes = df['Volume'].values if 'Volume' in df.columns else None
+        return False, (prices, volumes)
+
+    else:
+        raise AttributeError("df needs to either have ohlc or price as columns.")
+
+
+def moving_average(x, w):
+    return np.convolve(x, np.ones(w), 'valid') / w
+
