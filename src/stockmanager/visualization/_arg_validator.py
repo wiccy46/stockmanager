@@ -3,16 +3,18 @@
 # Link to original file: https://github.com/matplotlib/mplfinance/blob/master/src/mplfinance/_arg_validators.py
 import warnings
 import matplotlib.colors as mcolors
+import io
+
 
 # TODO, This can be greatly simplify just for this particular package.
 
 
 def _warn_no_xgaps_deprecated(value):
-    warnings.warn('\n `no_xgaps` is deprecated:' +
-                  '\n     Default value is now `no_xgaps=True`' +
-                  '\n     However, to set `no_xgaps=False` and silence this warning,' +
-                  '\n     use instead: `show_nontrading=True`.',
-                  category=DeprecationWarning)
+    msg = "`no_xgaps` is deprecated:"\
+          "Default value is now `no_xgaps=True`"\
+          "However, to set `no_xgaps=False` and silence this warning,"\
+          "use instead: `show_nontrading=True`."
+    warnings.warn(msg, category=DeprecationWarning)
     return isinstance(value, bool)
 
 
@@ -102,10 +104,7 @@ def _valid_plot_kwargs():
                      'Validator': lambda value: isinstance(value, float) or isinstance(value, int)},
 
         'figratio': {'Default': (8.00, 5.75),  # aspect ratio; will equal fig size when figscale=1.0
-                     'Validator': lambda value: isinstance(value, (tuple, list))
-                                                and len(value) == 2
-                                                and isinstance(value[0], (float, int))
-                                                and isinstance(value[1], (float, int))},
+                     'Validator': lambda value: isinstance(value, (tuple, list)) and len(value) == 2 and isinstance(value[0], (float, int)) and isinstance(value[1], (float, int))},
 
         'linecolor': {'Default': 'k',  # line color in line plot
                       'Validator': lambda value: mcolors.is_color_like(value)},
@@ -123,12 +122,10 @@ def _valid_plot_kwargs():
         #                  'Validator'   : lambda value: isinstance(value,str) },
 
         'addplot': {'Default': None,
-                    'Validator': lambda value: isinstance(value, dict) or (
-                                isinstance(value, list) and all([isinstance(d, dict) for d in value]))},
+                    'Validator': lambda value: isinstance(value, dict) or (isinstance(value, list) and all([isinstance(d, dict) for d in value]))},
 
         'savefig': {'Default': None,
-                    'Validator': lambda value: isinstance(value, dict) or isinstance(value, str) or isinstance(value,
-                                                                                                               io.BytesIO)},
+                    'Validator': lambda value: isinstance(value, dict) or isinstance(value, str) or isinstance(value, io.BytesIO)},
 
         'block': {'Default': True,
                   'Validator': lambda value: isinstance(value, bool)},
@@ -155,7 +152,7 @@ def _process_kwargs(kwargs, vkwargs):
     as kwargs and return the configuration dictionary.
     '''
     # initialize configuration from valid_kwargs_table:
-    config  = {}
+    config = {}
     for key, value in vkwargs.items():
         config[key] = value['Default']
 
@@ -169,12 +166,13 @@ def _process_kwargs(kwargs, vkwargs):
             try:
                 valid = vkwargs[key]['Validator'](value)
             except Exception as ex:
-                ex.extra_info = 'kwarg "' + key + '" validator raised exception to value: "' + str(value)+'"'
+                ex.extra_info = 'kwarg "' + key + '" validator raised exception to value: "' + str(value) + '"'
                 raise
             if not valid:
                 import inspect
                 v = inspect.getsource(vkwargs[key]['Validator']).strip()
-                raise TypeError('kwarg "' + key + '" validator returned False for value: "' + str(value) + '"\n    '+v)
+                raise TypeError(
+                    'kwarg "' + key + '" validator returned False for value: "' + str(value) + '"\n    ' + v)
         config[key] = value
 
     return config

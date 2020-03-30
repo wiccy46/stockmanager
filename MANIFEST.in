@@ -7,4 +7,6 @@ recursive-include docs *.rst
 recursive-include docs Makefile
 recursive-include tests *.py
 
+recursive-include src *.py
+
 recursive-include docs .gitignore
