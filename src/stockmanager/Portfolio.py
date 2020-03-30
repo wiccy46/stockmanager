@@ -21,11 +21,13 @@ class Portfolio(object):
 
     def __init__(self, read_file=None):
         #         self.path = './' if not data_folder else self._set_data_folder(data_folder)
-        #         self.record_keys = ['Ticker', 'Name', 'Previous Holding', 'Date', 'Type',
-        #                             'Amount', 'Price', 'Currency']
-        self._data_column_names = ['Name', 'Symbol', 'Exchange', 'Holdings',
-                                   'Price at Registration', 'Currency', 'Time of Entry']
-        self.summary = pd.DataFrame(columns=self._data_column_names)  # create an empty frame
+        self._summary_colnames = ['Name', 'Symbol', 'Exchange', 'Holdings',
+                                  'Price at Registration', 'Currency', 'Time of Entry']
+        self.summary = pd.DataFrame(columns=self._summary_colnames)  # create an empty frame
+        self._trade_record_colnames = ['Name', 'Symbol', 'Exchange', 'Type',
+                                       'Amount', 'Price', 'Total value']
+        self.trade_record = pd.DataFrame(columns=self._trade_record_colnames)
+        self.ticker = None
 
     def add(self, symbol, holdings, date='now', from_csv=None, overwite=False):
         """A new record, this will overwrite whatever the current one. """
@@ -35,7 +37,10 @@ class Portfolio(object):
             # Maybe this is not necessary
             self.symbol = symbol
             self.holdings = holdings
-            self.ticker = Ticker(self.symbol)
+            try:
+                self.ticker = Ticker(self.symbol)
+            except:  # Can have multiple exception possibilities
+                raise (AttributeError("symbol not recognise, please use a valid ticker symbol"))
 
         now = strftime("%Y-%m-%d %H:%M")
 
@@ -46,24 +51,40 @@ class Portfolio(object):
             # Append to the last row.
             to_append = [self.ticker.name, self.symbol, self.ticker.company_information['exchange'],
                          self.holdings, self.ticker.current_price, self.ticker.currency, now]
-            df_length = len(self.summary)
-            self.summary.loc[df_length] = to_append
+            df_len = len(self.summary)
+            self.summary.loc[df_len] = to_append
 
-    def load(self):
-        pass
+    def load(self, filepath, format='csv'):
+        if format == 'csv':
+            self.summary = pd.read_csv(filepath)
+            return self
+        else:
+            raise AttributeError("Unsupported format, currently support: csv")
 
-    def save(self, path):
-        pass
+    def save(self, filepath, format='csv'):
+        if format == 'csv':
+            self.summary.to_csv(filepath)
+            return self
 
-    def report(self):
-        pass
-        # Return a dataframe of the record.
+    def register_trade(self, type, symbol, amount, price=None, price_at_time=None,
+                       update_summary=True):
+        """Register a trade record. """
+        if not isinstance(type, str) or not isinstance(symbol, str) or not isinstance(amount, int):
+            raise TypeError("type can only be buy or sell, or b and s, "
+                            "symbol needs to be str and amount need to be int")
+        type = type.lower()
+        ticker = Ticker(symbol)
+        self._trade_record_colnames = ['Name', 'Symbol', 'Exchange', 'Type',
+                                       'Amount', 'Price', 'Total value']
+        value = price * amount
+        to_append = [ticker.name, self.symbol, ticker.company_information['exchange'],
+                     type, amount, price, value]
+        df_len = len(self.trade_record)
+        self.trade_record.loc[df_len] = to_append
+        if update_summary:
+            # update self.summary here
+            pass
 
-    def register_buy(self):
-        pass
-
-    def register_sell(self):
-        pass
 
 #     def _varify_folder(self):
 #         """check if data folder exist if not create one."""
