@@ -61,9 +61,9 @@ class Portfolio(object):
         else:
             raise AttributeError("Unsupported format, currently support: csv")
 
-    def save(self, filepath, format='csv'):
+    def save(self, filepath, format='csv', index=False):
         if format == 'csv':
-            self.summary.to_csv(filepath)
+            self.summary.to_csv(filepath, index=index)
             return self
 
     def register_trade(self, type, symbol, amount, price=None, price_at_time=None,
