@@ -197,3 +197,4 @@ fabric.properties
 
 .vscode
 .vscode/settings.json
+.ipynb_checkpoints
