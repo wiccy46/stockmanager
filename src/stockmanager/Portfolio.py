@@ -18,16 +18,22 @@ class Portfolio(object):
     --------
 
     """
+    # TODO what happen if holding is reduced to 0, move holding to history 
+    # TODo take agency fee into account
 
     def __init__(self, read_file=None):
         #         self.path = './' if not data_folder else self._set_data_folder(data_folder)
         self._summary_colnames = ['Name', 'Symbol', 'Exchange', 'Holdings',
-                                  'Price at Registration', 'Currency', 'Time of Entry']
+                                  'Price at Registration', 'Currency', 'Date']
         self.summary = pd.DataFrame(columns=self._summary_colnames)  # create an empty frame
-        self._trade_record_colnames = ['Name', 'Symbol', 'Exchange', 'Type',
-                                       'Amount', 'Price', 'Total value']
+        self._trade_record_colnames = ['Symbol', 'Sell', 'Buy', 'Price', 'Date', 'Total Sell', 'Total Buy']
         self.trade_record = pd.DataFrame(columns=self._trade_record_colnames)
         self.ticker = None
+        self._remove_buffer = None
+    
+    @staticmethod
+    def get_now():
+        return strftime("%d.%m.%Y %H:%M")
 
     def add(self, symbol, holdings, date='now', from_csv=None, overwite=False):
         """A new record, this will overwrite whatever the current one. """
@@ -42,7 +48,7 @@ class Portfolio(object):
             except:  # Can have multiple exception possibilities
                 raise (AttributeError("symbol not recognise, please use a valid ticker symbol"))
 
-        now = strftime("%Y-%m-%d %H:%M")
+        now = self.get_now()
 
         if self.symbol in self.summary.Symbol.values:
             self.summary.loc[self.summary['Symbol'] == self.symbol, ['Holdings']] = \
@@ -54,36 +60,91 @@ class Portfolio(object):
             df_len = len(self.summary)
             self.summary.loc[df_len] = to_append
 
-    def load(self, filepath, format='csv'):
+    def remove(self):
+        # remove a record in the summary. But put the remove data in a buffer for recovery
+        pass
+
+    def load(self, filepath='./', format='csv'):
+        if filepath == '.': 
+            filepath = './'
+        if not filepath.endswith('/'):
+            raise ValueError("filepath must end with /")
         if format == 'csv':
-            self.summary = pd.read_csv(filepath)
+            self.summary = pd.read_csv(filepath+'portfolio.csv')
+            self.trade_record = pd.read_csv(filepath+'trades.csv')
             return self
         else:
             raise AttributeError("Unsupported format, currently support: csv")
 
-    def save(self, filepath, format='csv', index=False):
+    def save(self, filepath='./', format='csv', index=False):
+        """Save summary and trade record to files
+        
+        Parameters
+        ----------
+        filepath : str, optional
+            Directory path, should end with /. Default is current directory.
+        format : str, optional
+            By default it will save as csv. #TODO add more date formats
+        index : bool, optional
+            Whether the dataframe index will be save as an extra column. Default is False
+        """
+        if filepath == '.': 
+            filepath = './'
         if format == 'csv':
-            self.summary.to_csv(filepath, index=index)
+            self.summary.to_csv(filepath+'portfolio.csv', index=index)
+            self.trade_record.to_csv(filepath+'trades.csv', index=index)
             return self
 
-    def register_trade(self, type, symbol, amount, price=None, price_at_time=None,
-                       update_summary=True):
-        """Register a trade record. """
-        if not isinstance(type, str) or not isinstance(symbol, str) or not isinstance(amount, int):
-            raise TypeError("type can only be buy or sell, or b and s, "
-                            "symbol needs to be str and amount need to be int")
-        type = type.lower()
-        ticker = Ticker(symbol)
-        self._trade_record_colnames = ['Name', 'Symbol', 'Exchange', 'Type',
-                                       'Amount', 'Price', 'Total value']
-        value = price * amount
-        to_append = [ticker.name, self.symbol, ticker.company_information['exchange'],
-                     type, amount, price, value]
+    def trade(self, typ, symbol, amount, fee=None, price=None, update_summary=True):
+        """Register a trade record. 
+
+        Parameters
+        ----------
+        typ : str
+            Can only be 'buy' or 'sell'
+        symbol : str
+            Ticker symbol
+        amount : int
+            Trade amount
+        fee : float or int, optional
+            The amount of fee in the same currency. This is not fee ratio but the absolute value.
+        price : float, optional
+            Price at sell. If not specified, it will try to get the current price
+        update_summary : bool, optional
+            If True, will update self.summary
+        """
+        typ = typ.lower()
+        _ticker = Ticker(symbol)
+        _register_price = price or _ticker.current_price
+        _fee = fee or 0.
+        if typ == 'buy':
+            _buy = int(amount)
+            _sell = 0 
+            _delta = int(amount)
+        elif typ == 'sell':
+            _sell = int(amount)
+            _buy = 0  
+            _delta = -1 * (amount)
+        else:
+            raise ValueError("typ can only be either buy or sell, case insensitive.")
+
+        _total_buy = _buy * _register_price - _fee
+        _total_sell = _sell * _register_price - _fee
+        _now = self.get_now()
+        to_append = [symbol, _sell, _buy, _register_price, _now, _total_sell, _total_buy]
         df_len = len(self.trade_record)
         self.trade_record.loc[df_len] = to_append
+        self.trade_record.sort_values(by=['Symbol', 'Time'], inplace=True)
         if update_summary:
             # update self.summary here
-            pass
+            # Check if summary has this: 
+            if symbol in set(self.summary['Symbol']):
+                self.summary.loc[self.summary['Symbol'] == symbol, ['Holdings']] = \
+                    self.summary.loc[self.summary['Symbol'] == symbol, ['Holdings']].Holdings[0] + _delta
+                self.summary.loc[self.summary['Symbol'] == symbol, ['Price at Registration']] = _register_price
+                self.summary.loc[self.summary['Symbol'] == symbol, ['Date']] = _now
+            else:
+                _LOGGER.warning("Symbol not in the summary. Register one for you")
 
 
 #     def _varify_folder(self):
