@@ -58,6 +58,7 @@ class Ticker():
     """
 
     # TODO add proxy
+    # TODO dont run summary to save time. 
     def __init__(self, symbol, proxy=None):
         """ticker is a string name of the stock"""
         self._ticker_symbol = symbol.upper()
@@ -223,6 +224,9 @@ class Ticker():
     @property
     def df(self):
         return self._df
+    
+    def get_fundamental(self, proxy=None):
+        self._get_fundamentals(proxy=proxy)
 
     def _get_fundamentals(self, proxy=None):
         """"This part scrap information from the Yahoo Finance: 
