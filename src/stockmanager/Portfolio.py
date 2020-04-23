@@ -70,8 +70,8 @@ class Portfolio(object):
         if not filepath.endswith('/'):
             raise ValueError("filepath must end with /")
         if format == 'csv':
-            self.summary = pd.read_csv(filepath+'portfolio.csv')
-            self.trade_record = pd.read_csv(filepath+'trades.csv')
+            self.summary = pd.read_csv(filepath + 'portfolio.csv')
+            self.trade_record = pd.read_csv(filepath + 'trades.csv')
             return self
         else:
             raise AttributeError("Unsupported format, currently support: csv")
@@ -91,8 +91,8 @@ class Portfolio(object):
         if filepath == '.': 
             filepath = './'
         if format == 'csv':
-            self.summary.to_csv(filepath+'portfolio.csv', index=index)
-            self.trade_record.to_csv(filepath+'trades.csv', index=index)
+            self.summary.to_csv(filepath + 'portfolio.csv', index=index)
+            self.trade_record.to_csv(filepath + 'trades.csv', index=index)
             return self
 
     def trade(self, typ, symbol, amount, fee=None, price=None, update_summary=True):
