@@ -91,7 +91,9 @@ class Ticker():
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
 
-        self._get_fundamentals()  # get all fundamental information, TODO Add proxy
+    @property
+    def update_fundamentals(self):
+        self._get_fundamentals()
 
     @property
     def symbol(self):
@@ -99,8 +101,7 @@ class Ticker():
 
     @symbol.setter
     def symbol(self, symbol):
-        self._ticker_symbol = symbol
-        self._get_fundamentals()
+        self._ticker_symbol = symbol 
 
     @property
     def institutional_holders(self):

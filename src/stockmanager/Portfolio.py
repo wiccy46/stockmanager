@@ -1,3 +1,21 @@
+""" Portfolio class. 
+
+
+Copyright 2020- Jiajun Yang
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from .Ticker import Ticker
 import pandas as pd
 from glob import glob
@@ -18,7 +36,7 @@ class Portfolio(object):
     --------
 
     """
-    # TODO what happen if holding is reduced to 0, move holding to history 
+    # TODO what happen if holding is reduced to 0, move holding to history
     # TODo take agency fee into account
 
     def __init__(self, read_file=None):
@@ -30,13 +48,23 @@ class Portfolio(object):
         self.trade_record = pd.DataFrame(columns=self._trade_record_colnames)
         self.ticker = None
         self._remove_buffer = None
-    
+
     @staticmethod
     def get_now():
         return strftime("%d.%m.%Y %H:%M")
 
-    def add(self, symbol, holdings, date='now', from_csv=None, overwite=False):
-        """A new record, this will overwrite whatever the current one. """
+    def add(self, symbol, holdings, date='now'):
+        """A new record, this will overwrite whatever the current one.
+
+        Parameters
+        ----------
+        symbol : str
+            Ticker symbol
+        holdings : int
+            The amount of holdings to add.
+        date : string. Optional
+            Date information. Default is the current time of call
+        """
         if not isinstance(symbol, str) or not isinstance(holdings, int):
             raise TypeError("symbol needs to be str and holdings need to be int")
         else:
@@ -61,11 +89,21 @@ class Portfolio(object):
             self.summary.loc[df_len] = to_append
 
     def remove(self):
-        # remove a record in the summary. But put the remove data in a buffer for recovery
+        # TODO remove a record in the summary. But put the remove data in a buffer for recovery
         pass
 
     def load(self, filepath='./', format='csv'):
-        if filepath == '.': 
+        """Load portfolio and trade files. 
+        
+        Parameters 
+        ----------
+        filepath : str, optional 
+            File path, not including the file name. Default is the current directory
+        format : str, optional
+            File format. Default is csv. TODO add more, such as sql, json. 
+
+        """
+        if filepath == '.':
             filepath = './'
         if not filepath.endswith('/'):
             raise ValueError("filepath must end with /")
@@ -78,7 +116,7 @@ class Portfolio(object):
 
     def save(self, filepath='./', format='csv', index=False):
         """Save summary and trade record to files
-        
+
         Parameters
         ----------
         filepath : str, optional
@@ -88,7 +126,7 @@ class Portfolio(object):
         index : bool, optional
             Whether the dataframe index will be save as an extra column. Default is False
         """
-        if filepath == '.': 
+        if filepath == '.':
             filepath = './'
         if format == 'csv':
             self.summary.to_csv(filepath + 'portfolio.csv', index=index)
@@ -96,7 +134,7 @@ class Portfolio(object):
             return self
 
     def trade(self, typ, symbol, amount, fee=None, price=None, update_summary=True):
-        """Register a trade record. 
+        """Register a trade record.
 
         Parameters
         ----------
@@ -119,11 +157,11 @@ class Portfolio(object):
         _fee = fee or 0.
         if typ == 'buy':
             _buy = int(amount)
-            _sell = 0 
+            _sell = 0
             _delta = int(amount)
         elif typ == 'sell':
             _sell = int(amount)
-            _buy = 0  
+            _buy = 0
             _delta = -1 * (amount)
         else:
             raise ValueError("typ can only be either buy or sell, case insensitive.")
@@ -137,7 +175,7 @@ class Portfolio(object):
         self.trade_record.sort_values(by=['Symbol', 'Time'], inplace=True)
         if update_summary:
             # update self.summary here
-            # Check if summary has this: 
+            # Check if summary has this:
             if symbol in set(self.summary['Symbol']):
                 self.summary.loc[self.summary['Symbol'] == symbol, ['Holdings']] = \
                     self.summary.loc[self.summary['Symbol'] == symbol, ['Holdings']].Holdings[0] + _delta
@@ -210,37 +248,4 @@ class Portfolio(object):
 #                 self.record = pd.from_csv(path)
 #             else:
 #                 self.merge(pd.from_csv(path))
-
-#     def save(self, ticker=None):
-#         """If you dont sepecify a ticker, save all to the dedicated data folder.
-#         """
-#         for key, value in self.record.items():
-#             value.to_csv(self.stock_record_path + key + ".csv")
-
-#     def merge(self, pd):
-#         """Merge a new df to existing record. Take care of duplicate"""
-#         return pd  # TODO add actual method.
-
-#     def add_new_stock(self, ticker, name, holding, date, currency):
-#         pass
-
-#     def add_entry(self, ticker, amount, price, typ, name=None, date='today', ):
-#         """add a buy/sell entry to the record.
-
-#         Parameters
-#         ----------
-#         ticker : str
-#             Ticker of the stock, this can later be used to request updated market info
-#         amount : int
-#             The amount of stocks in transaction
-#         price : float
-#             Price at the transaction
-#         typ : str
-#             Either 'buy' or 'sell'
-#         name : None or str
-#             If not set, try to find the name correspond to ticker.
-#         date : str
-#             By default it will get today as the transaction date, or yyyy-mm-dd format string.
-#         """
-#         typ = typ.lower()
 
