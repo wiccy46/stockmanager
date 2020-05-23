@@ -31,21 +31,17 @@ VALID_PERIOD = ['1d', '5d', '1mo', '3mo', '6mo',
 VALID_INTERVAL = ['1m', '2m', '5m', '15m', '30m', '60m',
                   '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
 
-"""
-Rework required. 
-
-Provide suitable apis and attributes rather than process df. 
-"""
-
 
 class Ticker():
-    """Base class of stockmanager, here it holds all basic infomation of a particular
+    """Base class of stockmanager, 
+    here it holds all basic infomation of a particular
     ticker. The information is requested from Yahoo Finance.
 
     Attributes
     ----------
     symbol : str
-        ticker symbol, updating the symbol will update the fundamental e.g. Microsoft is MSFT.
+        ticker symbol, updating the symbol will update the fundamental, 
+        e.g. Microsoft is MSFT.
     _base_url : str
         https://query1.finance.yahoo.com
     _scrape_url : str
@@ -61,7 +57,8 @@ class Ticker():
     mutual_fund_holder : pandas.DataFrame
         Top mutual fund holder
     company_information : dict
-        General information of the company, e.g. sector, fullTimeEmployees, website, etc.
+        General information of the company, 
+        e.g. sector, fullTimeEmployees, website, etc.
     """
 
     # TODO add proxy
@@ -70,7 +67,7 @@ class Ticker():
         self._ticker_symbol = symbol.upper()
         self._base_url = 'https://query1.finance.yahoo.com'
         self._scrape_url = 'https://finance.yahoo.com/quote'
-        self._fundamentals = False  # TODO to be added with get_fundamental()
+        self._fundamentals = False  
         self._recommendations = None  # TODO to be decided whether this necessary
         self._institutional_holders = None
         self._major_holders = None
@@ -93,7 +90,10 @@ class Ticker():
         self._cashflow = {
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
-        self._get_fundamentals()  # get all fundamental information, TODO Add proxy
+        # get all fundamental information, TODO Add proxy
+        self.meta = []
+        self.timestamp = []
+        self.indicators = []
 
     @property
     def symbol(self):
@@ -102,7 +102,6 @@ class Ticker():
     @symbol.setter
     def symbol(self, symbol):
         self._ticker_symbol = symbol
-        self._get_fundamentals()
 
     @property
     def institutional_holders(self):
@@ -125,7 +124,7 @@ class Ticker():
         return self._info
 
     def get_price(self, period="1mo", interval="1d",
-                  start=None, end=None, timezone=None):
+                  start=None, end=None, timezone=None, format='df'):
         """Return a DataFrame of the ticker based on certain period and interval
 
         Examples
@@ -156,6 +155,7 @@ class Ticker():
         timezone : None or str
             TODO.
         """
+        # First get the time period right
         if start or period is None or period.lower() == "max":
             if start is None:
                 start = -2208988800
@@ -197,6 +197,10 @@ class Ticker():
             raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n")
         self._price_request_content = self._price_request_content.json()
         self._price_request_content = self._price_request_content["chart"]["result"][0]
+        # Raw information from the request response. 
+        self.meta = self._price_request_content['meta']
+        self.timestamp = self._price_request_content['timestamp']
+        self.indicators = self._price_request_content['indicators']
         try: 
             df = helpers.create_df(self._price_request_content, timezone)
             df.dropna(inplace=True)
@@ -209,7 +213,7 @@ class Ticker():
     def df(self):
         return self._df
 
-    def _get_fundamentals(self, kind=None, proxy=None):
+    def get_fundamentals(self, kind=None, proxy=None):
         """"This part scrap information from the Yahoo Finance: 
         https://finance.yahoo.com/quote/YOUR_TICKER 
 
