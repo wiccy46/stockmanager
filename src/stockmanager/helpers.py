@@ -24,7 +24,7 @@ def create_df(data, timezone=None):
     adjclose = all_prices["close"]
     if "adjclose" in data["indicators"]:
         adjclose = data["indicators"]["adjclose"][0]["adjclose"]
-
+    # Create quotes dataframe based on all_price.s
     quotes = pd.DataFrame({"Open": all_prices["open"],
                            "High": all_prices["high"],
                            "Low": all_prices["low"],
@@ -34,7 +34,7 @@ def create_df(data, timezone=None):
 
     quotes.index = pd.to_datetime(timestamps, unit="s")
     quotes.sort_index(inplace=True)
-
+    # Adjust timezone if given. 
     if timezone is not None:
         quotes.index = quotes.index.tz_localize(timezone)
     return quotes

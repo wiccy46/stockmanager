@@ -21,9 +21,10 @@ import numpy as np
 import pandas as pd
 import time
 import datetime
-
+import json
 import requests
 from . import helpers
+from warnings import warn
 
 
 VALID_PERIOD = ['1d', '5d', '1mo', '3mo', '6mo',
@@ -90,7 +91,6 @@ class Ticker():
         self._cashflow = {
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
-        # get all fundamental information, TODO Add proxy
         self.meta = []
         self.timestamp = []
         self.indicators = []
@@ -153,7 +153,11 @@ class Ticker():
         end : None or str
             End date, yy-mm-dd, end date will be included if possible.
         timezone : None or str
-            TODO.
+            timezone for timestamp conversion. 
+        format : str
+            Indicate the return variable type. By default it is a pandas DataFrame.
+            Other options are dict (returns the raw dictionary file). Or json
+            (returns in json format)
         """
         # First get the time period right
         if start or period is None or period.lower() == "max":
@@ -201,13 +205,23 @@ class Ticker():
         self.meta = self._price_request_content['meta']
         self.timestamp = self._price_request_content['timestamp']
         self.indicators = self._price_request_content['indicators']
-        try: 
-            df = helpers.create_df(self._price_request_content, timezone)
-            df.dropna(inplace=True)
-        except Exception:
-            raise RuntimeError("Error parsing content.")
-        self._df = df.copy()
-        return df
+        self.prices = self.indicators["quote"][0]
+        if format.lower() == "df":
+            try:
+                df = helpers.create_df(self._price_request_content, timezone)
+                df.dropna(inplace=True)
+            except Exception:
+                raise RuntimeError("Error parsing content.")
+            self.prices = df.copy()
+        elif format.lower() == "json":
+            # Dumping into a JSon formatted string. 
+            self.prices = json.dumps(self.prices, sort_keys=True)
+            # self.prices = json.loads(s)
+        elif format.lower() == "dict":
+            pass
+        else:
+            warn("unrecognised format, return as dict")
+        return self.prices
 
     @property
     def df(self):
@@ -218,6 +232,14 @@ class Ticker():
         https://finance.yahoo.com/quote/YOUR_TICKER 
 
         It will try to get all fundamental information for more info than just prices.
+
+        Attributes
+        ----------
+        * major_holders
+        * institutional_holders
+        * mutual_fund_holders
+        * info
+        * recommendations
         """
         def cleanup(data):
             df = pd.DataFrame(data).drop(columns=['maxAge'])
