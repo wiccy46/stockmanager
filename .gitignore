@@ -198,3 +198,6 @@ fabric.properties
 .vscode
 .vscode/settings.json
 .ipynb_checkpoints
+Pipfile
+Pipfile.lock
+temp/debug file.ipynb
