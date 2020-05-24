@@ -97,6 +97,7 @@ class Ticker():
 
     @property
     def symbol(self):
+        """ticker symbol."""
         return self._ticker_symbol
 
     @symbol.setter
