@@ -7,13 +7,21 @@
     https://pytest.org/latest/plugins.html
 """
 
+import os
 import pytest
+from stockmanager import Ticker, Portfolio
 
-from stockmanager import Ticker
 
+@pytest.fixture
+def rootdir():
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="module")
 def sb():
     return Ticker(symbol='MSFT')
 
+
+@pytest.fixture(scope="session")
+def empty_portfolio():
+    return Portfolio()

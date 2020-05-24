@@ -201,3 +201,6 @@ fabric.properties
 Pipfile
 Pipfile.lock
 temp/debug file.ipynb
+
+tests/dummy_data/.~lock.dummy_record.csv#
+tests/dummy_data/dummy_record.ods

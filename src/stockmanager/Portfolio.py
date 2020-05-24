@@ -1,6 +1,4 @@
 """ Portfolio class. 
-
-
 Copyright 2020- Jiajun Yang
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +25,12 @@ _LOGGER.addHandler(logging.NullHandler())
 
 
 class Portfolio(object):
-    """Porfolio is a class help you keep track of your trade record, holders, profit of multiple tickers, save record
+    """Porfolio is a class help you keep track of your trade record, holders,
+    profit of multiple tickers, save record
     as a csv.
 
-    There are two ways, you can either instantiate a new manager or pull a prerecorded record file.
+    There are two ways, you can either instantiate a new manager
+    or pull a prerecorded record file.
 
     Examples
     --------
@@ -38,14 +38,15 @@ class Portfolio(object):
     """
     # TODO what happen if holding is reduced to 0, move holding to history
     # TODo take agency fee into account
+    # Add database version. 
 
     def __init__(self, read_file=None):
         #         self.path = './' if not data_folder else self._set_data_folder(data_folder)
-        self._summary_colnames = ['Name', 'Symbol', 'Exchange', 'Holdings',
+        self._summary_colnames = ['Symbol', 'Name', 'Exchange', 'Holdings',
                                   'Price at Registration', 'Currency', 'Date']
         self.summary = pd.DataFrame(columns=self._summary_colnames)  # create an empty frame
         self._trade_record_colnames = ['Symbol', 'Sell', 'Buy', 'Price', 'Date', 'Total Sell', 'Total Buy']
-        self.trade_record = pd.DataFrame(columns=self._trade_record_colnames)
+        self.record = pd.DataFrame(columns=self._trade_record_colnames)
         self.ticker = None
         self._remove_buffer = None
 
@@ -73,6 +74,7 @@ class Portfolio(object):
             self.holdings = holdings
             try:
                 self.ticker = Ticker(self.symbol)
+                self.ticker.get_fundamentals()
             except:  # Can have multiple exception possibilities
                 raise (AttributeError("symbol not recognise, please use a valid ticker symbol"))
 
@@ -83,38 +85,47 @@ class Portfolio(object):
                 self.summary.loc[self.summary['Symbol'] == self.symbol, ['Holdings']].Holdings[0] + self.holdings
         else:
             # Append to the last row.
-            to_append = [self.ticker.name, self.symbol, self.ticker.company_information['exchange'],
+            to_append = [self.symbol, self.ticker.name, self.ticker.company_information['exchange'],
                          self.holdings, self.ticker.current_price, self.ticker.currency, now]
             df_len = len(self.summary)
             self.summary.loc[df_len] = to_append
 
-    def remove(self):
-        # TODO remove a record in the summary. But put the remove data in a buffer for recovery
-        pass
+    # def remove(self):
+    #     # TODO remove a record in the summary. But put the remove data in a buffer for recovery
+    #     pass
 
-    def load(self, filepath='./', format='csv'):
-        """Load portfolio and trade files. 
+    # def load(self, filepath='./', format='csv'):
+    #     """Load portfolio and trade files. 
         
-        Parameters 
-        ----------
-        filepath : str, optional 
-            File path, not including the file name. Default is the current directory
-        format : str, optional
-            File format. Default is csv. TODO add more, such as sql, json. 
+    #     Parameters 
+    #     ----------
+    #     filepath : str, optional 
+    #         File path, not including the file name. Default is the current directory
+    #     format : str, optional
+    #         File format. Default is csv. TODO add more, such as sql, json. 
 
-        """
-        if filepath == '.':
-            filepath = './'
-        if not filepath.endswith('/'):
-            raise ValueError("filepath must end with /")
-        if format == 'csv':
-            self.summary = pd.read_csv(filepath + 'portfolio.csv')
-            self.trade_record = pd.read_csv(filepath + 'trades.csv')
-            return self
-        else:
-            raise AttributeError("Unsupported format, currently support: csv")
+    #     """
+    #     if filepath == '.':
+    #         filepath = './'
+    #     if not filepath.endswith('/'):
+    #         raise ValueError("filepath must end with /")
+    #     if format == 'csv':
+    #         self.summary = pd.read_csv(filepath + 'portfolio.csv')
+    #         self.record = pd.read_csv(filepath + 'trades.csv')
+    #         return self
+    #     else:
+    #         raise AttributeError("Unsupported format, currently support: csv")
 
-    def save(self, filepath='./', format='csv', index=False):
+    def load(self, summary_path=None, record_path=None):
+        if not summary_path and not record_path:
+            raise AttributeError("No file given for either summary or record")
+        if summary_path:
+            self.summary = pd.read_csv(summary_path)
+        if record_path:
+            self.record = pd.read_csv(record_path)
+
+    def save(self, filepath='./', summary_name=None,
+             record_name=None, format='csv', index=False):
         """Save summary and trade record to files
 
         Parameters
@@ -128,9 +139,15 @@ class Portfolio(object):
         """
         if filepath == '.':
             filepath = './'
+        if '.' in summary_name or '.' in record_name:
+            raise AttributeError("Give the filename without extension")
+        if not summary_name:
+            summary_name = ''.join([summry_name, '.', format])
+        if not record_name:
+            record_name = ''.join([record_name, '.', format])
         if format == 'csv':
-            self.summary.to_csv(filepath + 'portfolio.csv', index=index)
-            self.trade_record.to_csv(filepath + 'trades.csv', index=index)
+            self.summary.to_csv(filepath + 'summary.csv', index=index)
+            self.record.to_csv(filepath + 'records.csv', index=index)
             return self
 
     def trade(self, typ, symbol, amount, fee=None, price=None, update_summary=True):
@@ -170,9 +187,9 @@ class Portfolio(object):
         _total_sell = _sell * _register_price - _fee
         _now = self.get_now()
         to_append = [symbol, _sell, _buy, _register_price, _now, _total_sell, _total_buy]
-        df_len = len(self.trade_record)
-        self.trade_record.loc[df_len] = to_append
-        self.trade_record.sort_values(by=['Symbol', 'Time'], inplace=True)
+        df_len = len(self.record)
+        self.record.loc[df_len] = to_append
+        self.record.sort_values(by=['Symbol', 'Time'], inplace=True)
         if update_summary:
             # update self.summary here
             # Check if summary has this:
