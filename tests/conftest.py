@@ -7,4 +7,13 @@
     https://pytest.org/latest/plugins.html
 """
 
-# import pytest
+import pytest
+
+from stockmanager import Ticker
+
+
+
+@pytest.fixture(scope="module")
+def sb():
+    return Ticker(symbol='MSFT')
+
