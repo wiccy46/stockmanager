@@ -48,8 +48,6 @@ def test_load_no_param(empty_portfolio, rootdir):
 
 def test_save(empty_portfolio, rootdir):
     path = os.path.join(rootdir, 'dummy_data')
-    print("The path is listed below")
-    print(path)
     empty_portfolio.save(filepath=path)
     os.remove(os.path.join(path, 'summary.csv'))
     os.remove(os.path.join(path, 'records.csv'))

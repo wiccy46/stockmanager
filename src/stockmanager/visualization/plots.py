@@ -34,7 +34,6 @@ def plot_price(price, backend='matplotlib', **kwargs):
 
     if backend == 'matplotlib':
         price_plot_with_matplotlib(price, **kwargs)
-
     else:
         price_plot_with_plotly(price, **kwargs)
 
@@ -50,7 +49,7 @@ def price_plot_with_matplotlib(price, **kwargs):
     mpf.plot(price, **kwargs)
 
 
-def price_plot_with_plotly(price, **kwargs):
+def price_plot_with_plotly(price, show_hours=True, **kwargs):
     """Use plotly for interactive plot.
 
     Parameters
@@ -58,9 +57,7 @@ def price_plot_with_plotly(price, **kwargs):
     price : pd.DataFrame
         price data frame
     """
-    show_hours = True
     has_ohlc, ohlc = get_ohlc(price)  # Get ohlc for
-
     config = _process_kwargs(kwargs, _valid_plot_kwargs())
     config['type'] = config['type'].lower()  # Relax the spelling.
     # style = config['style']
