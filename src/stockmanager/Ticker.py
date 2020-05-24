@@ -223,10 +223,6 @@ class Ticker():
             warn("unrecognised format, return as dict")
         return self.prices
 
-    @property
-    def df(self):
-        return self._df
-
     def get_fundamentals(self, kind=None, proxy=None):
         """"This part scrap information from the Yahoo Finance: 
         https://finance.yahoo.com/quote/YOUR_TICKER 
