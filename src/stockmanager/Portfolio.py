@@ -17,6 +17,7 @@ limitations under the License.
 from .Ticker import Ticker
 import pandas as pd
 from glob import glob
+import os
 from os import mkdir
 from time import strftime
 import logging
@@ -94,29 +95,18 @@ class Portfolio(object):
     #     # TODO remove a record in the summary. But put the remove data in a buffer for recovery
     #     pass
 
-    # def load(self, filepath='./', format='csv'):
-    #     """Load portfolio and trade files. 
-        
-    #     Parameters 
-    #     ----------
-    #     filepath : str, optional 
-    #         File path, not including the file name. Default is the current directory
-    #     format : str, optional
-    #         File format. Default is csv. TODO add more, such as sql, json. 
-
-    #     """
-    #     if filepath == '.':
-    #         filepath = './'
-    #     if not filepath.endswith('/'):
-    #         raise ValueError("filepath must end with /")
-    #     if format == 'csv':
-    #         self.summary = pd.read_csv(filepath + 'portfolio.csv')
-    #         self.record = pd.read_csv(filepath + 'trades.csv')
-    #         return self
-    #     else:
-    #         raise AttributeError("Unsupported format, currently support: csv")
-
     def load(self, summary_path=None, record_path=None):
+        """Load summary and record file. You can have a saved summary and record
+        data using the save() method. The load method will load self.summary and 
+        self.record if the file path is valid. 
+
+        Parameters
+        ----------
+        summary_path : str, optional
+            path including filename of the summary data. 
+        record_path : str, optional
+            path including filename of the record data.
+        """
         if not summary_path and not record_path:
             raise AttributeError("No file given for either summary or record")
         if summary_path:
@@ -139,15 +129,21 @@ class Portfolio(object):
         """
         if filepath == '.':
             filepath = './'
-        if '.' in summary_name or '.' in record_name:
-            raise AttributeError("Give the filename without extension")
-        if not summary_name:
-            summary_name = ''.join([summry_name, '.', format])
-        if not record_name:
+        if summary_name is not None:
+            if '.' in summary_name:
+                raise AttributeError("use filename without extension")
+            summary_name = ''.join([summary_name, '.', format])
+        else:
+            summary_name = ''.join(['summary.', format])
+        if record_name is not None:
+            if '.' in record_name:
+                raise AttributeError("use filename without extension")
             record_name = ''.join([record_name, '.', format])
+        else:
+            record_name = ''.join(['records.', format])
         if format == 'csv':
-            self.summary.to_csv(filepath + 'summary.csv', index=index)
-            self.record.to_csv(filepath + 'records.csv', index=index)
+            self.summary.to_csv(os.path.join(filepath, summary_name), index=index)
+            self.record.to_csv(os.path.join(filepath, record_name), index=index)
             return self
 
     def trade(self, typ, symbol, amount, fee=None, price=None, update_summary=True):
