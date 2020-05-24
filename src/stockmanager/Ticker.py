@@ -21,9 +21,10 @@ import numpy as np
 import pandas as pd
 import time
 import datetime
-
+import json
 import requests
 from . import helpers
+from warnings import warn
 
 VALID_PERIOD = ['1d', '5d', '1mo', '3mo', '6mo',
                 '1y', '2y', '5y', '10y', 'ytd', 'max']
@@ -32,13 +33,15 @@ VALID_INTERVAL = ['1m', '2m', '5m', '15m', '30m', '60m',
 
 
 class Ticker():
-    """Base class of stockmanager, here it holds all basic infomation of a particular
+    """Base class of stockmanager, 
+    here it holds all basic infomation of a particular
     ticker. The information is requested from Yahoo Finance.
 
     Attributes
     ----------
     symbol : str
-        ticker symbol, updating the symbol will update the fundamental e.g. Microsoft is MSFT.
+        ticker symbol, updating the symbol will update the fundamental, 
+        e.g. Microsoft is MSFT.
     _base_url : str
         https://query1.finance.yahoo.com
     _scrape_url : str
@@ -54,7 +57,8 @@ class Ticker():
     mutual_fund_holder : pandas.DataFrame
         Top mutual fund holder
     company_information : dict
-        General information of the company, e.g. sector, fullTimeEmployees, website, etc.
+        General information of the company, 
+        e.g. sector, fullTimeEmployees, website, etc.
     """
 
     # TODO add proxy
@@ -64,7 +68,7 @@ class Ticker():
         self._ticker_symbol = symbol.upper()
         self._base_url = 'https://query1.finance.yahoo.com'
         self._scrape_url = 'https://finance.yahoo.com/quote'
-        self._fundamentals = False  # TODO to be added with get_fundamental()
+        self._fundamentals = False  
         self._recommendations = None  # TODO to be decided whether this necessary
         self._institutional_holders = None
         self._major_holders = None
@@ -90,18 +94,18 @@ class Ticker():
         self._cashflow = {
             "yearly": helpers.empty_df(),
             "quarterly": helpers.empty_df()}
-
-    @property
-    def update_fundamentals(self):
-        self._get_fundamentals()
+        self.meta = []
+        self.timestamp = []
+        self.indicators = []
 
     @property
     def symbol(self):
+        """ticker symbol."""
         return self._ticker_symbol
 
     @symbol.setter
     def symbol(self, symbol):
-        self._ticker_symbol = symbol 
+        self._ticker_symbol = symbol
 
     @property
     def institutional_holders(self):
@@ -142,7 +146,7 @@ class Ticker():
         return self._currency
 
     def get_price(self, period="1mo", interval="1d",
-                  start=None, end=None, timezone=None):
+                  start=None, end=None, timezone=None, format='df'):
         """Return a DataFrame of the ticker based on certain period and interval
 
         Examples
@@ -171,8 +175,13 @@ class Ticker():
         end : None or str
             End date, yy-mm-dd, end date will be included if possible.
         timezone : None or str
-            TODO.
+            timezone for timestamp conversion. 
+        format : str
+            Indicate the return variable type. By default it is a pandas DataFrame.
+            Other options are dict (returns the raw dictionary file). Or json
+            (returns in json format)
         """
+        # First get the time period right
         if start or period is None or period.lower() == "max":
             if start is None:
                 start = -2208988800
@@ -214,26 +223,41 @@ class Ticker():
             raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n")
         self._price_request_content = self._price_request_content.json()
         self._price_request_content = self._price_request_content["chart"]["result"][0]
-        try: 
-            df = helpers.create_df(self._price_request_content, timezone)
-            df.dropna(inplace=True)
-        except Exception:
-            raise RuntimeError("Error parsing content.")
-        self._df = df.copy()
-        return df
+        # Raw information from the request response. 
+        self.meta = self._price_request_content['meta']
+        self.timestamp = self._price_request_content['timestamp']
+        self.indicators = self._price_request_content['indicators']
+        self.prices = self.indicators["quote"][0]
+        if format.lower() == "df":
+            try:
+                df = helpers.create_df(self._price_request_content, timezone)
+                df.dropna(inplace=True)
+            except Exception:
+                raise RuntimeError("Error parsing content.")
+            self.prices = df.copy()
+        elif format.lower() == "json":
+            # Dumping into a JSon formatted string. 
+            self.prices = json.dumps(self.prices, sort_keys=True)
+            # self.prices = json.loads(s)
+        elif format.lower() == "dict":
+            pass
+        else:
+            warn("unrecognised format, return as dict")
+        return self.prices
 
-    @property
-    def df(self):
-        return self._df
-    
-    def get_fundamental(self, proxy=None):
-        self._get_fundamentals(proxy=proxy)
-
-    def _get_fundamentals(self, proxy=None):
+    def get_fundamentals(self, kind=None, proxy=None):
         """"This part scrap information from the Yahoo Finance: 
         https://finance.yahoo.com/quote/YOUR_TICKER 
 
         It will try to get all fundamental information for more info than just prices.
+
+        Attributes
+        ----------
+        * major_holders
+        * institutional_holders
+        * mutual_fund_holders
+        * info
+        * recommendations
         """
         def cleanup(data):
             df = pd.DataFrame(data).drop(columns=['maxAge'])
