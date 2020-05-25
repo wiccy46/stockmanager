@@ -40,22 +40,44 @@ Load a stock info::
 Other attributes: institutional_holders, major_holders, mutual_fund_holders,
 sustainability, company_information,
 
+Visualization:
 
-Description
-===========
+    from stockmanager import Ticker, visualization
 
-Initial commit, currently on have method to get stock info, recent roadmap:
+    mystock = Ticker(symbol='MSFT')  # Give a ticker string
+    # result is a pandas DataFrame
+    info_pd = mystock.get_price(start='2020-03-01', end='2020-03-19')
 
-* File saver for your personal stock
-* Stocks class based on StockBase for multiple tickers
-* Keep track of trades, report profit
-* Analysis of stocks, visualization
-* Trading simulation... to be decided.
-* and more...
+    # Accept matplotlib and plotly (interactive) backend 
+    visualization.plot_price(info_pd)
+
+    # or use plotly
+    visualization.plot_price(info_pd, backend='plotly')
+
+Portfolio is a class that let you add holdings of certain stocks and add trade 
+records. It has two main attributes, 
+
+* Portfolio.summary as your holding summary
+* Portfolio.record as a table of all the trade record. 
+
+Example: 
+
+    from stockmanager import Portfolio
+
+    myportfolio = Portfolio()
+    myportfolio.add('AAPL', holdings=200)
+    myportfolio.add('ZM', holdings=200)
+    myportfolio.summary # This is a DataFrame view of your holdings.
+
+    # typ is buy or sell, price by default will try to get the current price
+    # update_summary will modified self.summary according to amount. 
+    myportfolio.trade(typ='buy'|'sell', symbol='AAPL', amount=20,
+                      prince=200., update_summary=True)
+    
+    myportfolio.save(filepath='./', summary_name='portfolio',
+                     record_name='record', format='csv')
+    
+    myportfolio.load(summary_path='./portfolio.csv', record_path='./record.csv')
 
 
-Note
-====
 
-This project has been set up using PyScaffold 3.2.3. For details and usage
-information on PyScaffold see https://pyscaffold.org/.

@@ -65,6 +65,7 @@ class Portfolio(object):
             The amount of holdings to add.
         date : string. Optional
             Date information. Default is the current time of call
+            Currently only now. More options to be added. 
         """
         if not isinstance(symbol, str) or not isinstance(holdings, int):
             raise TypeError("symbol needs to be str and holdings need to be int")
@@ -76,8 +77,8 @@ class Portfolio(object):
                 self.ticker.get_fundamentals()
             except:  # Can have multiple exception possibilities
                 raise (AttributeError("symbol not recognise, please use a valid ticker symbol"))
-
-        now = self.get_now()
+        if date == 'now':
+            now = self.get_now()
         if self.symbol in self.summary.Symbol.values:
             self.summary.loc[self.summary['Symbol'] == self.symbol, ['Holdings']] = \
                 self.summary.loc[self.summary['Symbol'] == self.symbol, ['Holdings']].Holdings[0] + self.holdings

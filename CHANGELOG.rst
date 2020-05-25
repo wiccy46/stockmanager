@@ -2,11 +2,12 @@
 Changelog
 =========
 
-Version 0.0.7
-=============
+Version 0.1
+===========
 
 - Add Portfolio class for managing your stock portfolio
 - Test Portfolio
+- Add visualization helpers, e.g. plot_price
 
 Version 0.0.6
 =============
