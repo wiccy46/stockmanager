@@ -1,6 +1,4 @@
-============
-stockmanager
-============
+# stockmanager
 
 
 Manager, Analyze, Stimulate stock information.
@@ -9,15 +7,15 @@ Manager, Analyze, Stimulate stock information.
     :target: https://travis-ci.com/wiccy46/stockmanager
 
 
-Installation
-============
+## Installation
+
 
 Using pip::
 
     pip install stockmanager
 
-Example
-=======
+## Example
+
 
 Load a stock info::
 
@@ -78,6 +76,3 @@ Example:
                      record_name='record', format='csv')
     
     myportfolio.load(summary_path='./portfolio.csv', record_path='./record.csv')
-
-
-
