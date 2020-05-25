@@ -1,6 +1,8 @@
 from stockmanager import Portfolio
 import pytest
 import os
+import time
+from unittest import mock
 
 myrecord = Portfolio()
 
@@ -31,26 +33,35 @@ def test_add_unrecognisable_symbol():
 
 
 def test_load(empty_portfolio, rootdir):
-    path = os.path.join(rootdir, 'dummy_data', 'dummy.csv')
-    empty_portfolio.load(summary_path=path)
+    summary_path = os.path.join(rootdir, 'dummy_data', 'dummy.csv')
+    record_path = os.path.join(rootdir, 'dummy_data', 'dummy_record.csv')
+    empty_portfolio.load(summary_path=summary_path, record_path=record_path)
     assert empty_portfolio.summary['Symbol'][0] == 'MSFT'
     assert empty_portfolio.summary['Symbol'][1] == 'ZM'
 
-    path = os.path.join(rootdir, 'dummy_data', 'dummy_record.csv')
-    empty_portfolio.load(record_path=path)
-    assert empty_portfolio.record['Symbol'][0] == 'MSFT'
 
-
-def test_load_no_param(empty_portfolio, rootdir):
-    with pytest.raises(AttributeError):
+def test_load_no_such_file(empty_portfolio, rootdir):
+    with pytest.raises(FileNotFoundError):
         empty_portfolio.load()
 
 
-def test_save(empty_portfolio, rootdir):
-    path = os.path.join(rootdir, 'dummy_data')
-    empty_portfolio.save(filepath=path)
-    os.remove(os.path.join(path, 'summary.csv'))
-    os.remove(os.path.join(path, 'records.csv'))
+# @mock.patch(Portfolio.to_csv)
+# def test_save(empty_portfolio, rootdir):
+#     path = os.path.join(rootdir, 'dummy_data')
+#     empty_portfolio.save(filepath=path)
+#     time.sleep(2)
+#     os.remove(os.path.join(path, 'portfolio.csv'))
+#     os.remove(os.path.join(path, 'records.csv'))
 
 
+def test_remove_str(dummy_portfolio):
+    dummy_portfolio.remove('AAPL')
+    check = 'AAPL' in set(dummy_portfolio.summary.Symbol)
+    assert check == False
+
+
+def test_remove_list(dummy_portfolio):
+    dummy_portfolio.remove(['AAPL', 'MSFT'])
+    check = ('AAPL', 'MSFT') in set(dummy_portfolio.summary.Symbol)
+    assert check == False
 

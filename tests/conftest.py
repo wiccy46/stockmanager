@@ -9,7 +9,7 @@
 
 import os
 import pytest
-from pandas import read_csv, to_datetime
+from pandas import read_csv, to_datetime, DataFrame
 from stockmanager import Ticker, Portfolio
 
 
@@ -35,3 +35,14 @@ def sb():
 @pytest.fixture(scope="session")
 def empty_portfolio():
     return Portfolio()
+
+
+@pytest.fixture(scope="session")
+def dummy_portfolio():
+    p = Portfolio()
+    d = {'Symbol':['AAPL', 'MSFT', 'ZM'],
+         'Name': ['AA', 'MM', 'ZOOM'],
+         'Price': ['10', '15', '5'],
+    }
+    p.summary = DataFrame(data=d)
+    return p

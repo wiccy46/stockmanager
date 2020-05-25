@@ -39,14 +39,13 @@ class Portfolio(object):
     """
     # TODO what happen if holding is reduced to 0, move holding to history
     # TODo take agency fee into account
-    # Add database version. 
-
     def __init__(self, read_file=None):
-        #         self.path = './' if not data_folder else self._set_data_folder(data_folder)
         self._summary_colnames = ['Symbol', 'Name', 'Exchange', 'Holdings',
                                   'Price at Registration', 'Currency', 'Date']
-        self.summary = pd.DataFrame(columns=self._summary_colnames)  # create an empty frame
-        self._trade_record_colnames = ['Symbol', 'Sell', 'Buy', 'Price', 'Date', 'Total Sell', 'Total Buy']
+        # create an empty frame
+        self.summary = pd.DataFrame(columns=self._summary_colnames)
+        self._trade_record_colnames = ['Symbol', 'Sell', 'Buy', 'Price',
+                                       'Date', 'Total Sell', 'Total Buy']
         self.record = pd.DataFrame(columns=self._trade_record_colnames)
         self.ticker = None
         self._remove_buffer = None
@@ -70,7 +69,6 @@ class Portfolio(object):
         if not isinstance(symbol, str) or not isinstance(holdings, int):
             raise TypeError("symbol needs to be str and holdings need to be int")
         else:
-            # Maybe this is not necessary
             self.symbol = symbol
             self.holdings = holdings
             try:
@@ -80,22 +78,35 @@ class Portfolio(object):
                 raise (AttributeError("symbol not recognise, please use a valid ticker symbol"))
 
         now = self.get_now()
-
         if self.symbol in self.summary.Symbol.values:
             self.summary.loc[self.summary['Symbol'] == self.symbol, ['Holdings']] = \
                 self.summary.loc[self.summary['Symbol'] == self.symbol, ['Holdings']].Holdings[0] + self.holdings
         else:
             # Append to the last row.
-            to_append = [self.symbol, self.ticker.name, self.ticker.company_information['exchange'],
-                         self.holdings, self.ticker.current_price, self.ticker.currency, now]
+            to_append = [self.symbol, self.ticker.name,
+                         self.ticker.company_information['exchange'],
+                         self.holdings, self.ticker.current_price,
+                         self.ticker.currency, now]
             df_len = len(self.summary)
             self.summary.loc[df_len] = to_append
 
-    # def remove(self):
-    #     # TODO remove a record in the summary. But put the remove data in a buffer for recovery
-    #     pass
+    def remove(self, symbol):
+        """Remove an stock from summary
+        
+        Parameters
+        ----------
+        symbol : str or list
+            Ticker symbol(s) to be removed.
+        """
+        if isinstance(symbol, str):
+            self.summary = self.summary[self.summary.Symbol != symbol]
+        elif hasattr(symbol, '__iter__'):
+            for s in symbol:
+                self.summary = self.summary[self.summary.Symbol != s]
+        else:
+            raise TypeError("symbol must be str or list.")
 
-    def load(self, summary_path=None, record_path=None):
+    def load(self, summary_path='./portfolio.csv', record_path='./record.csv'):
         """Load summary and record file. You can have a saved summary and record
         data using the save() method. The load method will load self.summary and 
         self.record if the file path is valid. 
@@ -103,16 +114,15 @@ class Portfolio(object):
         Parameters
         ----------
         summary_path : str, optional
-            path including filename of the summary data. 
+            path including filename of the summary data. By default it tries to
+            look for porfolio.csv in the current directory.
         record_path : str, optional
-            path including filename of the record data.
+            path including filename of the record data. By default it tries to
+            look for record.csv in the current directory.
         """
-        if not summary_path and not record_path:
-            raise AttributeError("No file given for either summary or record")
-        if summary_path:
-            self.summary = pd.read_csv(summary_path)
-        if record_path:
-            self.record = pd.read_csv(record_path)
+        self.summary = pd.read_csv(summary_path)
+        self.record = pd.read_csv(record_path)
+        return self
 
     def save(self, filepath='./', summary_name=None,
              record_name=None, format='csv', index=False):
@@ -134,7 +144,7 @@ class Portfolio(object):
                 raise AttributeError("use filename without extension")
             summary_name = ''.join([summary_name, '.', format])
         else:
-            summary_name = ''.join(['summary.', format])
+            summary_name = ''.join(['portfolio.', format])
         if record_name is not None:
             if '.' in record_name:
                 raise AttributeError("use filename without extension")
@@ -196,69 +206,3 @@ class Portfolio(object):
                 self.summary.loc[self.summary['Symbol'] == symbol, ['Date']] = _now
             else:
                 _LOGGER.warning("Symbol not in the summary. Register one for you")
-
-
-#     def _varify_folder(self):
-#         """check if data folder exist if not create one."""
-#         fn = [n.replace(self.path, '') for n in glob(self.path + '*/')]
-#         if 'data/' in fn:
-#             self.sub_path = self.path + 'data/'
-#             self.stock_info_path = self.sub_path + 'stock_info/'
-#             self.stock_record_path = self.sub_path + 'stock_record/'
-#             # Remove the relative path in the string.
-#             sub_fn = [n.replace(sub_path, '') for n in glob(sub_path + '*/')]
-#             if 'stock_info/' not in sub_fn:
-#                 _LOGGER.info("stock_info folder not found.")
-#                 try:
-#                     mkdir(sub_path + 'stock_info/')
-#                 except OSError:
-#                     raise OSError("Failed to create directory, check if path valid")
-
-#             if 'stock_record/' not in sub_fn:
-#                 _LOGGER.info("stock_record folder not found.")
-#                 try:
-#                     mkdir(sub_path + 'stock_record/')
-#                 except OSError:
-#                     raise OSError("Failed to create directory, check if path valid")
-#         else:
-#             try:
-#                 mkdir(path + 'data/')
-#                 mkdir(path + 'data/stock_info/')
-#                 mkdir(path + 'data/stock_record/')
-#             except OSError:
-#                 raise OSError("Failed to create directory, check if path valid. ")
-
-#     def _set_data_folder(self, path):
-#         """Set the path Trade_Manager should look for
-#         loading and storing stock info and trade record
-
-#         Parameters
-#         ----------
-#         path : str
-#             path to the data folder. If "data" folder not exist then create a folder.
-#         """
-#         pass
-
-#     def load_csv(self, path, overwrite=False):
-#         """The method look through the directory for all csv files and load them as your
-#         trading recording dictionary. Each csv file is your record of a particular stock.
-#         It will use the filename as the key, and the DataFrame converted from csv as values.
-#         Results are updated/overwrite to self.record.
-
-#         Parameters
-#         ----------
-#         path : str
-#             Path of the folder, it will only load the csv files.
-
-#         overwrite : bool
-#             If true, overwrite self.record. Else, merge it instead
-
-#         """
-#         if not self.record:
-#             self.record = pd.from_csv(path)
-#         else:
-#             if overwrite:
-#                 self.record = pd.from_csv(path)
-#             else:
-#                 self.merge(pd.from_csv(path))
-
